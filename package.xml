@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<package>
+  <name>lio_sam</name>
+  <version>1.0.0</version>
+  <description>Lidar Odometry</description>
+
+  <maintainer email="shant@mit.edu">Tixiao Shan</maintainer>
+
+  <license>TODO</license>
+
+  <author>Tixiao Shan</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+  <build_depend>rospy</build_depend>
+  <run_depend>rospy</run_depend>
+  
+  <build_depend>tf</build_depend>
+  <run_depend>tf</run_depend>
+
+  <build_depend>cv_bridge</build_depend>
+  <run_depend>cv_bridge</run_depend>
+
+  <build_depend>pcl_conversions</build_depend>
+  <run_depend>pcl_conversions</run_depend>
+
+  <build_depend>std_msgs</build_depend>
+  <run_depend>std_msgs</run_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <build_depend>nav_msgs</build_depend>
+  <run_depend>nav_msgs</run_depend>
+
+  <build_depend>message_generation</build_depend>
+  <run_depend>message_generation</run_depend>
+  <build_depend>message_runtime</build_depend>
+  <run_depend>message_runtime</run_depend>
+
+  <build_depend>GTSAM</build_depend>
+  <run_depend>GTSAM</run_depend>
+
+</package>

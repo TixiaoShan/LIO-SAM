@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot name="roboat" xmlns:xacro="http://roboat.org">
+  <xacro:property name="PI" value="3.1415926535897931" />
+
+  <link name="base_link"></link>
+
+  <joint name="base_link_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis_link" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="chassis_link"></link>
+  
+  <link name="imu_link"> </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="chassis_link" />
+    <child link="imu_link" />
+    <origin xyz="0 -0.1 0" rpy="${PI} 0 ${PI}" />
+  </joint>
+
+  <link name="imu_enu_link"> </link>
+  <joint name="imu_enu_joint" type="fixed">
+    <parent link="imu_link" />
+    <child link="imu_enu_link" />
+    <origin xyz="0 0 0" rpy="${PI} 0 ${PI}" />
+  </joint>
+
+  <link name="velodyne"> </link>
+  <joint name="velodyne_joint" type="fixed">
+    <parent link="chassis_link" />
+    <child link="velodyne" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="realsense_link"> </link>
+  <joint name="realsense_joint" type="fixed">
+    <parent link="chassis_link" />
+    <child link="realsense_link" />
+    <origin xyz="0.1 0 -0.1" rpy="0 0 0" />
+  </joint>
+
+  <link name="navsat_link"> </link>
+  <joint name="navsat_joint" type="fixed">
+    <parent link="chassis_link" />
+    <child link="navsat_link" />
+    <origin xyz="-0.2 0 0.2" rpy="0 0 0" />
+  </joint>
+
+  <link name="loam_camera"> </link>
+  <joint name="_loam_camera_joint" type="fixed">
+    <parent link="chassis_link" />
+    <child link="loam_camera" />
+    <origin xyz="0 0 0" rpy="1.570796 0 1.570796" />
+  </joint>
+
+</robot>
