@@ -8,23 +8,25 @@
 
 ## Menu
 
-[**System architecture**](#system-architecture)
+  - [**System architecture**](#system-architecture)
 
-[**Dependency**](#dependency)
+  - [**Package dependency**](#dependency)
 
-[**Install**](#install)
+  - [**Pckage install**](#install)
 
-[**Prepare lidar data**](#prepare-lidar-data) (must read)
+  - [**Prepare lidar data**](#prepare-lidar-data) (must read)
 
-[**Prepare IMU data**](#prepare-imu-data) (must read)
+  - [**Prepare IMU data**](#prepare-imu-data) (must read)
 
-[**Sample data**](#sample-data)
+  - [**Sample data**](#sample-data)
 
-[**Run the package**](#run-the-package)
+  - [**Run the package**](#run-the-package)
 
-[**Paper**](#paper)
+  - [**Paper**](#paper)
 
-[**Acknowledgement**](#acknowledgement)
+  - [**TODO**](#todo)
+
+  - [**Acknowledgement**](#acknowledgement)
 
 ## System architecture
 
@@ -69,7 +71,7 @@ catkin_make
 
 The user needs to prepare the point cloud data in the correct format for cloud deskewing, which is mainly done in "imageProjection.cpp". The two requirements are:
   - **Provide point time stamp**. LIO-SAM uses IMU data to perform point cloud deskew. Thus, the relative point time in a scan needs to be known. The up-to-date Velodyne ROS driver should output this information directly. Here, we assume the point time channel is called "time." The definition of the point type is located at the top of the "imageProjection.cpp." "deskewPoint()" function utilizes this relative time to obtain the transformation of this point relative to the beginning of the scan. When the lidar rotates at 10Hz, the timestamp of a point should vary between 0 and 0.1 seconds. If you are using other lidar sensors, you may need to change the name of this time channel and make sure that it is the relative time in a scan.
-  - **Provide point ring number**. LIO-SAM uses this information to organize the point correctly in a matrix. The ring number indicates which channel of the sensor that this point belongs to. The definition of the point type is located at the top of "imageProjection.cpp." The up-to-date Velodyne ROS driver should output this information directly. Again, if you are using other lidar sensors, you may need to rename this information.
+  - **Provide point ring number**. LIO-SAM uses this information to organize the point correctly in a matrix. The ring number indicates which channel of the sensor that this point belongs to. The definition of the point type is located at the top of "imageProjection.cpp." The up-to-date Velodyne ROS driver should output this information directly. Again, if you are using other lidar sensors, you may need to rename this information. Note that only mechanical lidars are supported by the package currently. 
 
 ## Prepare IMU data
 
@@ -86,15 +88,14 @@ The user needs to prepare the point cloud data in the correct format for cloud d
 ## Sample data
 
   * Download some sample datasets to test the functionality of the package. The datasets below is configured to run using the default settings:
-    - [**Walk dataset**](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)
+    - [**Walking dataset**](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)
     - [**Garden dataset**](https://drive.google.com/file/d/1q6yuVhyJbkUBhut9yhfox2WdV4VZ9BZX/view?usp=sharing)
 
   * The datasets below need the parameters to be configured. In these datasets, the point cloud topic is "points_raw." The IMU topic is "imu_correct," which gives the IMU data in ROS REP105 standard. Because no IMU transformation is needed for this dataset, the following configurations need to be changed to run this dataset successfully:
     - The "imuTopic" parameter in "config/params.yaml" needs to be set to "imu_correct".
     - The "extrinsicRot" and "extrinsicRPY" in "config/params.yaml" needs to be set as identity matrices.
+      - [**Rotation dataset**](https://drive.google.com/file/d/1V4ijY4PgLdjKmdzcQ18Xu7VdcHo2UaWI/view?usp=sharing)
       - [**Campus dataset**](https://drive.google.com/file/d/1q4Sf7s2veVc7bs08Qeha3stOiwsytopL/view?usp=sharing)
-
-
 
 ## Run the package
 
@@ -110,7 +111,7 @@ rosbag play your-bag.bag -r 3
 
 ## Paper 
 
-Thank you for citing [LIO-SAM](./config/doc/paper.pdf) if you use any of this code: 
+Thank you for citing [LIO-SAM](./config/doc/paper.pdf) if you use any of this code. 
 ```
 @inproceedings{liosam2020shan,
   title={LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping},
@@ -132,5 +133,12 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 }
 ```
 
+## TODO
+
+  - [ ] Support Ouster lidar
+  - [ ] Share Ouster lidar dataset
+  - [ ] Update readme for using GPS
+
 ## Acknowledgement
-LIO-SAM is based on LOAM (J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time).
+
+  - LIO-SAM is based on LOAM (J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time).
