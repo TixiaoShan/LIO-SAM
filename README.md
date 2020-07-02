@@ -115,12 +115,12 @@ Thank you for citing [LIO-SAM](./config/doc/paper.pdf) if you use any of this co
 @inproceedings{liosam2020shan,
   title={LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping},
   author={Shan, Tixiao and Englot, Brendan and Meyers, Drew and Wang, Wei and Ratti, Carlo and Rus Daniela},
-  journal={arXiv preprint arXiv:2007.xxxxx}
+  journal={arXiv preprint arXiv:2007.00258}
   year={2020}
 }
 ```
 
-Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAutonomyLab/LeGO-LOAM)
+Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAutonomyLab/LeGO-LOAM).
 ```
 @inproceedings{legoloam2018shan,
   title={LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain},
