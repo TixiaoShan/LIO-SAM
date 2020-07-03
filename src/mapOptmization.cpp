@@ -1440,5 +1440,8 @@ int main(int argc, char** argv)
 
     ros::spin();
 
+    loopthread.join();
+    visualizeMapThread.join();
+
     return 0;
 }
