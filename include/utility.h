@@ -222,6 +222,12 @@ public:
         imu_out.orientation.z = q_final.z();
         imu_out.orientation.w = q_final.w();
 
+        if (sqrt(q_final.x()*q_final.x() + q_final.y()*q_final.y() + q_final.z()*q_final.z() + q_final.w()*q_final.w()) < 0.1)
+        {
+            ROS_ERROR("Invalid quaternion, please use a 9-axis IMU!");
+            ros::shutdown();
+        }
+
         return imu_out;
     }
 };
