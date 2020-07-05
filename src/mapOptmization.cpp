@@ -361,7 +361,7 @@ public:
         pcl::PointCloud<PointType>::Ptr globalSurfCloud(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr globalSurfCloudDS(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr globalMapCloud(new pcl::PointCloud<PointType>());
-        for (int i = 0; i < cloudKeyPoses3D->size(); i++) {
+        for (int i = 0; i < (int)cloudKeyPoses3D->size(); i++) {
             *globalCornerCloud += *transformPointCloud(cornerCloudKeyFrames[i],  &cloudKeyPoses6D->points[i]);
             *globalSurfCloud   += *transformPointCloud(surfCloudKeyFrames[i],    &cloudKeyPoses6D->points[i]);
             cout << "\r" << std::flush << "Processing feature cloud " << i << " of " << cloudKeyPoses6D->size() << " ...";
@@ -405,7 +405,7 @@ public:
         kdtreeGlobalMap->radiusSearch(cloudKeyPoses3D->back(), globalMapVisualizationSearchRadius, pointSearchIndGlobalMap, pointSearchSqDisGlobalMap, 0);
         mtx.unlock();
 
-        for (int i = 0; i < pointSearchIndGlobalMap.size(); ++i)
+        for (int i = 0; i < (int)pointSearchIndGlobalMap.size(); ++i)
             globalMapKeyPoses->push_back(cloudKeyPoses3D->points[pointSearchIndGlobalMap[i]]);
         // downsample near selected key frames
         pcl::VoxelGrid<PointType> downSizeFilterGlobalMapKeyPoses; // for global map visualization
@@ -414,7 +414,7 @@ public:
         downSizeFilterGlobalMapKeyPoses.filter(*globalMapKeyPosesDS);
 
         // extract visualized and downsampled key frames
-        for (int i = 0; i < globalMapKeyPosesDS->size(); ++i){
+        for (int i = 0; i < (int)globalMapKeyPosesDS->size(); ++i){
             if (pointDistance(globalMapKeyPosesDS->points[i], cloudKeyPoses3D->back()) > globalMapVisualizationSearchRadius)
                 continue;
             int thisKeyInd = (int)globalMapKeyPosesDS->points[i].intensity;
@@ -470,7 +470,7 @@ public:
         kdtreeHistoryKeyPoses->radiusSearch(cloudKeyPoses3D->back(), historyKeyframeSearchRadius, pointSearchIndLoop, pointSearchSqDisLoop, 0);
         
         closestHistoryFrameID = -1;
-        for (int i = 0; i < pointSearchIndLoop.size(); ++i)
+        for (int i = 0; i < (int)pointSearchIndLoop.size(); ++i)
         {
             int id = pointSearchIndLoop[i];
             if (abs(cloudKeyPoses6D->points[id].time - timeLaserCloudInfoLast) > historyKeyframeSearchTimeDiff)
@@ -483,7 +483,7 @@ public:
         if (closestHistoryFrameID == -1)
             return false;
 
-        if (cloudKeyPoses3D->size() - 1 == closestHistoryFrameID)
+        if ((int)cloudKeyPoses3D->size() - 1 == closestHistoryFrameID)
             return false;
 
         // save latest key frames
@@ -648,7 +648,7 @@ public:
         int numPoses = cloudKeyPoses3D->size();
         for (int i = numPoses-1; i >= 0; --i)
         {
-            if (cloudToExtract->size() <= surroundingKeyframeSize)
+            if ((int)cloudToExtract->size() <= surroundingKeyframeSize)
                 cloudToExtract->push_back(cloudKeyPoses3D->points[i]);
             else
                 break;
@@ -667,7 +667,7 @@ public:
         // extract all the nearby key poses and downsample them
         kdtreeSurroundingKeyPoses->setInputCloud(cloudKeyPoses3D); // create kd-tree
         kdtreeSurroundingKeyPoses->radiusSearch(cloudKeyPoses3D->back(), (double)surroundingKeyframeSearchRadius, pointSearchInd, pointSearchSqDis);
-        for (int i = 0; i < pointSearchInd.size(); ++i)
+        for (int i = 0; i < (int)pointSearchInd.size(); ++i)
         {
             int id = pointSearchInd[i];
             surroundingKeyPoses->push_back(cloudKeyPoses3D->points[id]);
@@ -699,7 +699,7 @@ public:
 
         // extract surrounding map
         #pragma omp parallel for num_threads(numberOfCores)
-        for (int i = 0; i < cloudToExtract->size(); ++i)
+        for (int i = 0; i < (int)cloudToExtract->size(); ++i)
         {
             if (pointDistance(cloudToExtract->points[i], cloudKeyPoses3D->back()) > surroundingKeyframeSearchRadius)
                 continue;
@@ -711,7 +711,7 @@ public:
         // fuse the map
         laserCloudCornerFromMap->clear();
         laserCloudSurfFromMap->clear(); 
-        for (int i = 0; i < cloudToExtract->size(); ++i)
+        for (int i = 0; i < (int)cloudToExtract->size(); ++i)
         {
             *laserCloudCornerFromMap += laserCloudCornerSurroundingVec[i];
             *laserCloudSurfFromMap   += laserCloudSurfSurroundingVec[i];
@@ -1260,14 +1260,14 @@ public:
         isam->update();
 
         // update multiple-times till converge
-        if (aLoopIsClosed == true)
-        {
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
-        }
+        // if (aLoopIsClosed == true)
+        // {
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        // }
         
         gtSAMgraph.resize(0);
         initialEstimate.clear();

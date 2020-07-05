@@ -4,7 +4,7 @@ lio_sam:
   pointCloudTopic: "points_raw"               # Point cloud data
   imuTopic: "imu_raw"                         # IMU data
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
-  gpsTopic: "odometry/gpsz"                   # GPS odometry topic from navsat, see module_navsat.launch file
+  gpsTopic: "odometry/navsatz"                   # GPS odometry topic from navsat, see module_navsat.launch file
 
   # GPS Settings
   useImuHeadingInitialization: true           # if using GPS data, set to "true"
@@ -29,7 +29,7 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
   extrinsicTrans: [0.0, 0.0, 0.0]
-  extrinsicTrans: [-8.086759e-01, 3.195559e-01, -7.997231e-01] # kitti
+  # extrinsicTrans: [-8.086759e-01, 3.195559e-01, -7.997231e-01] # kitti-raw
   extrinsicRot: [-1, 0, 0,
                   0, 1, 0,
                   0, 0, -1]
