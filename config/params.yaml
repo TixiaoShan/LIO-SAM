@@ -29,6 +29,7 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
   extrinsicTrans: [0.0, 0.0, 0.0]
+  extrinsicTrans: [-8.086759e-01, 3.195559e-01, -7.997231e-01] # kitti
   extrinsicRot: [-1, 0, 0,
                   0, 1, 0,
                   0, 0, -1]
@@ -49,7 +50,7 @@ lio_sam:
   surfFeatureMinValidNum: 100
 
   # voxel filter paprams
-  odometrySurfLeafSize: 0.2                     # default: 0.2
+  odometrySurfLeafSize: 0.4                     # default: 0.4
   mappingCornerLeafSize: 0.2                    # default: 0.2
   mappingSurfLeafSize: 0.4                      # default: 0.4
 
