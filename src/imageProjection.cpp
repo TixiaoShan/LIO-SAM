@@ -76,7 +76,7 @@ public:
         subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>(pointCloudTopic, 5, &ImageProjection::cloudHandler, this, ros::TransportHints().tcpNoDelay());
 
         pubExtractedCloud = nh.advertise<sensor_msgs::PointCloud2> ("lio_sam/deskew/cloud_deskewed", 1);
-        pubLaserCloudInfo = nh.advertise<lio_sam::cloud_info> ("lio_sam/deskew/cloud_info", 1);
+        pubLaserCloudInfo = nh.advertise<lio_sam::cloud_info> ("lio_sam/deskew/cloud_info", 10);
 
         allocateMemory();
         resetParameters();
@@ -203,7 +203,7 @@ public:
         if (ringFlag == 0)
         {
             ringFlag = -1;
-            for (int i = 0; i < currentCloudMsg.fields.size(); ++i)
+            for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
             {
                 if (currentCloudMsg.fields[i].name == "ring")
                 {
@@ -222,7 +222,7 @@ public:
         if (deskewFlag == 0)
         {
             deskewFlag = -1;
-            for (int i = 0; i < currentCloudMsg.fields.size(); ++i)
+            for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
             {
                 if (currentCloudMsg.fields[i].name == "time")
                 {
@@ -273,7 +273,7 @@ public:
 
         imuPointerCur = 0;
 
-        for (int i = 0; i < imuQueue.size(); ++i)
+        for (int i = 0; i < (int)imuQueue.size(); ++i)
         {
             sensor_msgs::Imu thisImuMsg = imuQueue[i];
             double currentImuTime = thisImuMsg.header.stamp.toSec();
@@ -336,7 +336,7 @@ public:
         // get start odometry at the beinning of the scan
         nav_msgs::Odometry startOdomMsg;
 
-        for (int i = 0; i < odomQueue.size(); ++i)
+        for (int i = 0; i < (int)odomQueue.size(); ++i)
         {
             startOdomMsg = odomQueue[i];
 
@@ -371,7 +371,7 @@ public:
 
         nav_msgs::Odometry endOdomMsg;
 
-        for (int i = 0; i < odomQueue.size(); ++i)
+        for (int i = 0; i < (int)odomQueue.size(); ++i)
         {
             endOdomMsg = odomQueue[i];
 
