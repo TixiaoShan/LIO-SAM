@@ -29,7 +29,6 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
   extrinsicTrans: [0.0, 0.0, 0.0]
-  # extrinsicTrans: [-8.086759e-01, 3.195559e-01, -7.997231e-01] # kitti-raw
   extrinsicRot: [-1, 0, 0,
                   0, 1, 0,
                   0, 0, -1]

@@ -129,6 +129,8 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/loop-closure.gif" alt="drawing" width="400"/>
 </p>
 
+  - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. More discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
+
 ## Paper 
 
 Thank you for citing [LIO-SAM (IROS-2020)](./config/doc/paper.pdf) if you use any of this code. 
