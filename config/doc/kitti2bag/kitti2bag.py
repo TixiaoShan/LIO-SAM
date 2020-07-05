@@ -44,6 +44,63 @@ def save_imu_data(bag, kitti, imu_frame_id, topic):
         imu.angular_velocity.z = oxts.packet.wu
         bag.write(topic, imu, t=imu.header.stamp)
 
+def save_imu_data_raw(bag, kitti, imu_frame_id, topic):
+    print("Exporting IMU Raw")
+    synced_path = kitti.data_path
+    unsynced_path = synced_path.replace('sync', 'extract')
+    imu_path = os.path.join(unsynced_path, 'oxts')
+
+    # read time stamp (convert to ros seconds format)
+    with open(os.path.join(imu_path, 'timestamps.txt')) as f:
+        lines = f.readlines()
+        imu_datetimes = []
+        for line in lines:
+            if len(line) == 1:
+                continue
+            timestamp = datetime.strptime(line[:-4], '%Y-%m-%d %H:%M:%S.%f')
+            imu_datetimes.append(float(timestamp.strftime("%s.%f")))
+
+    # fix imu time using a linear model (may not be ideal, ^_^)
+    imu_index = np.asarray(range(len(imu_datetimes)), dtype=np.float64)
+    z = np.polyfit(imu_index, imu_datetimes, 1)
+    imu_datetimes_new = z[0] * imu_index + z[1]
+    imu_datetimes = imu_datetimes_new.tolist()
+
+    # get all imu data
+    imu_data_dir = os.path.join(imu_path, 'data')
+    imu_filenames = sorted(os.listdir(imu_data_dir))
+    imu_data = [None] * len(imu_filenames)
+    for i, imu_file in enumerate(imu_filenames):
+        imu_data_file = open(os.path.join(imu_data_dir, imu_file), "r")
+        for line in imu_data_file:
+            if len(line) == 1:
+                continue
+            stripped_line = line.strip()
+            line_list = stripped_line.split()
+            imu_data[i] = line_list
+
+    assert len(imu_datetimes) == len(imu_data)
+    
+    for timestamp, data in zip(imu_datetimes, imu_data):
+        roll, pitch, yaw = float(data[3]), float(data[4]), float(data[5]), 
+        q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+        imu = Imu()
+        imu.header.frame_id = imu_frame_id
+        imu.header.stamp = rospy.Time.from_sec(timestamp)
+        imu.orientation.x = q[0]
+        imu.orientation.y = q[1]
+        imu.orientation.z = q[2]
+        imu.orientation.w = q[3]
+        imu.linear_acceleration.x = float(data[11])
+        imu.linear_acceleration.y = float(data[12])
+        imu.linear_acceleration.z = float(data[13])
+        imu.angular_velocity.x = float(data[17])
+        imu.angular_velocity.y = float(data[18])
+        imu.angular_velocity.z = float(data[19])
+        bag.write(topic, imu, t=imu.header.stamp)
+
+        imu.header.frame_id = 'imu_enu_link'
+        bag.write('/imu_correct', imu, t=imu.header.stamp) # for LIO-SAM GPS
 
 def save_dynamic_tf(bag, kitti, kitti_type, initial_time):
     print("Exporting time dependent transformations")
@@ -100,8 +157,7 @@ def save_dynamic_tf(bag, kitti, kitti_type, initial_time):
             tf_msg.transforms.append(tf_stamped)
 
             bag.write('/tf', tf_msg, tf_msg.transforms[0].header.stamp)
-          
-        
+
 def save_camera_data(bag, kitti_type, kitti, util, bridge, camera, camera_frame_id, topic, initial_time):
     print("Exporting camera {}".format(camera))
     if kitti_type.find("raw") != -1:
@@ -168,6 +224,9 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
 
     iterable = zip(velo_datetimes, velo_filenames)
     bar = progressbar.ProgressBar()
+
+    count = 0
+
     for dt, filename in bar(iterable):
         if dt is None:
             continue
@@ -176,6 +235,19 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
 
         # read binary data
         scan = (np.fromfile(velo_filename, dtype=np.float32)).reshape(-1, 4)
+
+        # get ring channel
+        depth = np.linalg.norm(scan, 2, axis=1)
+        pitch = np.arcsin(scan[:, 2] / depth) # arcsin(z, depth)
+        fov_down = -24.8 / 180.0 * np.pi
+        fov = (abs(-24.8) + abs(2.0)) / 180.0 * np.pi
+        proj_y = (pitch + abs(fov_down)) / fov  # in [0.0, 1.0]
+        proj_y *= 64  # in [0.0, H]
+        proj_y = np.floor(proj_y)
+        proj_y = np.minimum(64 - 1, proj_y)
+        proj_y = np.maximum(0, proj_y).astype(np.int32)  # in [0,H-1]
+        proj_y = proj_y.reshape(-1, 1)
+        scan = np.concatenate((scan,proj_y), axis=1)
 
         # create header
         header = Header()
@@ -186,11 +258,17 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
                   PointField('y', 4, PointField.FLOAT32, 1),
                   PointField('z', 8, PointField.FLOAT32, 1),
-                  PointField('i', 12, PointField.FLOAT32, 1)]
+                  PointField('intensity', 12, PointField.FLOAT32, 1),
+                  PointField('ring', 16, PointField.UINT16, 1)]
         pcl_msg = pcl2.create_cloud(header, fields, scan)
+        pcl_msg.is_dense = True
+        # print(pcl_msg)
 
-        bag.write(topic + '/pointcloud', pcl_msg, t=pcl_msg.header.stamp)
+        bag.write(topic, pcl_msg, t=pcl_msg.header.stamp)
 
+        # count += 1
+        # if count > 200:
+        #     break
 
 def get_static_transform(from_frame_id, to_frame_id, transform):
     t = transform[0:3, 3]
@@ -258,7 +336,7 @@ def save_gps_vel_data(bag, kitti, gps_frame_id, topic):
         bag.write(topic, twist_msg, t=twist_msg.header.stamp)
 
 
-def run_kitti2bag():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Convert KITTI dataset to ROS bag file the easy way!")
     # Accepted argument values
     kitti_types = ["raw_synced", "odom_color", "odom_gray"]
@@ -311,10 +389,11 @@ def run_kitti2bag():
             # IMU
             imu_frame_id = 'imu_link'
             imu_topic = '/kitti/oxts/imu'
-            gps_fix_topic = '/kitti/oxts/gps/fix'
-            gps_vel_topic = '/kitti/oxts/gps/vel'
-            velo_frame_id = 'velo_link'
-            velo_topic = '/kitti/velo'
+            imu_raw_topic = '/imu_raw'
+            gps_fix_topic = '/gps/fix'
+            gps_vel_topic = '/gps/vel'
+            velo_frame_id = 'velodyne'
+            velo_topic = '/points_raw'
 
             T_base_link_to_imu = np.eye(4, 4)
             T_base_link_to_imu[0:3, 3] = [-2.71/2.0-0.05, 0.32, 0.93]
@@ -332,13 +411,14 @@ def run_kitti2bag():
             util = pykitti.utils.read_calib_file(os.path.join(kitti.calib_path, 'calib_cam_to_cam.txt'))
 
             # Export
-            save_static_transforms(bag, transforms, kitti.timestamps)
-            save_dynamic_tf(bag, kitti, args.kitti_type, initial_time=None)
-            save_imu_data(bag, kitti, imu_frame_id, imu_topic)
+            # save_static_transforms(bag, transforms, kitti.timestamps)
+            # save_dynamic_tf(bag, kitti, args.kitti_type, initial_time=None)
+            # save_imu_data(bag, kitti, imu_frame_id, imu_topic)
+            save_imu_data_raw(bag, kitti, imu_frame_id, imu_raw_topic)
             save_gps_fix_data(bag, kitti, imu_frame_id, gps_fix_topic)
             save_gps_vel_data(bag, kitti, imu_frame_id, gps_vel_topic)
-            for camera in cameras:
-                save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera=camera[0], camera_frame_id=camera[1], topic=camera[2], initial_time=None)
+            # for camera in cameras:
+            #     save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera=camera[0], camera_frame_id=camera[1], topic=camera[2], initial_time=None)
             save_velo_data(bag, kitti, velo_frame_id, velo_topic)
 
         finally:
