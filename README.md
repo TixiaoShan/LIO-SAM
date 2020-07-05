@@ -19,7 +19,7 @@
 
   - [**Package dependency**](#dependency)
 
-  - [**Pckage install**](#install)
+  - [**Package install**](#install)
 
   - [**Prepare lidar data**](#prepare-lidar-data) (must read)
 
@@ -145,7 +145,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## TODO
 
-  - [ ] Support Ouster lidar
+  - [ ] Support Ouster lidar (hardware ready, no official Ouster driver yet, no ETA from Ouster)
   - [ ] Share Ouster lidar dataset
   - [ ] Update readme for using GPS
 
