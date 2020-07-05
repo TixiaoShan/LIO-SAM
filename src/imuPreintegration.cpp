@@ -144,6 +144,7 @@ public:
         {
             resetParams();
             imuPreintegrationResetId = currentResetId;
+            return;
         }
 
 

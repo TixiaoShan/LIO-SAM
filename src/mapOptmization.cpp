@@ -140,8 +140,6 @@ public:
 
     Eigen::Affine3f transPointAssociateToMap;
 
-    Eigen::Affine3f lastImuTransformation;
-
     mapOptimization()
     {
         ISAM2Params parameters;
@@ -582,6 +580,18 @@ public:
         isam->update();
         gtSAMgraph.resize(0);
 
+        isamCurrentEstimate = isam->calculateEstimate();
+        Pose3 latestEstimate = isamCurrentEstimate.at<Pose3>(isamCurrentEstimate.size()-1);
+
+        transformTobeMapped[0] = latestEstimate.rotation().roll();
+        transformTobeMapped[1] = latestEstimate.rotation().pitch();
+        transformTobeMapped[2] = latestEstimate.rotation().yaw();
+        transformTobeMapped[3] = latestEstimate.translation().x();
+        transformTobeMapped[4] = latestEstimate.translation().y();
+        transformTobeMapped[5] = latestEstimate.translation().z();
+
+        correctPoses();
+
         aLoopIsClosed = true;
     }
 
@@ -597,6 +607,7 @@ public:
 
     void updateInitialGuess()
     {
+        static Eigen::Affine3f lastImuTransformation;
         // initialization
         if (cloudKeyPoses3D->points.empty())
         {
@@ -1260,14 +1271,14 @@ public:
         isam->update();
 
         // update multiple-times till converge
-        // if (aLoopIsClosed == true)
-        // {
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        // }
+        if (aLoopIsClosed == true)
+        {
+            isam->update();
+            isam->update();
+            isam->update();
+            isam->update();
+            isam->update();
+        }
         
         gtSAMgraph.resize(0);
         initialEstimate.clear();

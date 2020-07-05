@@ -4,7 +4,7 @@ lio_sam:
   pointCloudTopic: "points_raw"               # Point cloud data
   imuTopic: "imu_raw"                         # IMU data
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
-  gpsTopic: "odometry/navsatz"                   # GPS odometry topic from navsat, see module_navsat.launch file
+  gpsTopic: "odometry/gpsz"                   # GPS odometry topic from navsat, see module_navsat.launch file
 
   # GPS Settings
   useImuHeadingInitialization: true           # if using GPS data, set to "true"
