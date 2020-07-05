@@ -25,9 +25,11 @@
 
   - [**Prepare IMU data**](#prepare-imu-data) (must read)
 
-  - [**Sample data**](#sample-data)
+  - [**Sample datasets**](#sample-datasets)
 
   - [**Run the package**](#run-the-package)
+
+  - [**Other notes**](#other-notes)
 
   - [**Paper**](#paper)
 
@@ -94,7 +96,7 @@ The user needs to prepare the point cloud data in the correct format for cloud d
     <img src="./config/doc/imu-transform.png" alt="drawing" width="800"/>
 </p>
 
-## Sample data
+## Sample datasets
 
   * Download some sample datasets to test the functionality of the package. The datasets below is configured to run using the default settings:
     - [**Walking dataset**](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)
@@ -118,6 +120,14 @@ roslaunch lio_sam run.launch
 ```
 rosbag play your-bag.bag -r 3
 ```
+
+## Other notes
+
+  - **Loop closure:** Set the "loopClosureEnableFlag" in "params.yaml" to "true" to test the loop closure function. The loop closure function here is simply adapted from LeGO-LOAM, which is an ICP-based method. Because ICP runs pretty slow, it is suggested that the playback speed is set to be "-r 1". You can try the Campus dataset (large) for testing. The loop closure happens when the sensor returns back to the original starting location.
+
+<p align='center'>
+    <img src="./config/doc/loop-closure.gif" alt="drawing" width="400"/>
+</p>
 
 ## Paper 
 
