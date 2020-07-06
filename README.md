@@ -101,6 +101,7 @@ The user needs to prepare the point cloud data in the correct format for cloud d
   * Download some sample datasets to test the functionality of the package. The datasets below is configured to run using the default settings:
     - [**Walking dataset**](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)
     - [**Garden dataset**](https://drive.google.com/file/d/1q6yuVhyJbkUBhut9yhfox2WdV4VZ9BZX/view?usp=sharing)
+    - [**Park dataset**](https://drive.google.com/file/d/19PZieaJaVkXDs2ZromaHTxYoq0zkiHae/view?usp=sharing)
 
   * The datasets below need the parameters to be configured. In these datasets, the point cloud topic is "points_raw." The IMU topic is "imu_correct," which gives the IMU data in ROS REP105 standard. Because no IMU transformation is needed for this dataset, the following configurations need to be changed to run this dataset successfully:
     - The "imuTopic" parameter in "config/params.yaml" needs to be set to "imu_correct".
@@ -123,11 +124,13 @@ rosbag play your-bag.bag -r 3
 
 ## Other notes
 
-  - **Loop closure:** Set the "loopClosureEnableFlag" in "params.yaml" to "true" to test the loop closure function. The loop closure function here is simply adapted from LeGO-LOAM, which is an ICP-based method. Because ICP runs pretty slow, it is suggested that the playback speed is set to be "-r 1". You can try the Campus dataset (large) for testing. The loop closure happens when the sensor returns back to the original starting location.
+  - **Loop closure:** Set the "loopClosureEnableFlag" in "params.yaml" to "true" to test the loop closure function. In Rviz, uncheck "Map (cloud)" and check "Map (global)". This is because the visualized map - "Map (cloud)" - is simply a stack of point clouds in Rviz. Their postion will not be updated after pose correction. The loop closure function here is simply adapted from LeGO-LOAM, which is an ICP-based method. Because ICP runs pretty slow, it is suggested that the playback speed is set to be "-r 1". You can try the Campus dataset (large) for testing. The loop closure happens when the sensor returns back to the original starting location.
 
 <p align='center'>
     <img src="./config/doc/loop-closure.gif" alt="drawing" width="400"/>
 </p>
+
+  - **Using GPS:** The park dataset is provided for testing LIO-SAM with GPS data. This dataset is gathered by [Yewei Huang](https://robustfieldautonomylab.github.io/people.html). To enable the GPS function, change "gpsTopic" in "params.yaml" to "odometry/gps". In Rviz, uncheck "Map (cloud)" and check "Map (global)". Also check "Odom GPS", which visualizes the GPS odometry. "gpsCovThreshold" can be adjusted to filter bad GPS readings. "poseCovThreshold" can be used to adjust the frequency of adding GPS factor to the graph. For example, you will notice the trajectory is constantly corrected by GPS whey you set "poseCovThreshold" to 1.0.
 
   - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. More discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
 
@@ -159,7 +162,6 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
   - [ ] Support Ouster lidar (hardware ready, no official Ouster driver yet, no ETA from Ouster)
   - [ ] Share Ouster lidar dataset
-  - [ ] Update readme for using GPS
 
 ## Acknowledgement
 
