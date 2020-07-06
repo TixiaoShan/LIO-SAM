@@ -130,7 +130,11 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/loop-closure.gif" alt="drawing" width="400"/>
 </p>
 
-  - **Using GPS:** The park dataset is provided for testing LIO-SAM with GPS data. This dataset is gathered by [Yewei Huang](https://robustfieldautonomylab.github.io/people.html). To enable the GPS function, change "gpsTopic" in "params.yaml" to "odometry/gps". In Rviz, uncheck "Map (cloud)" and check "Map (global)". Also check "Odom GPS", which visualizes the GPS odometry. "gpsCovThreshold" can be adjusted to filter bad GPS readings. "poseCovThreshold" can be used to adjust the frequency of adding GPS factor to the graph. For example, you will notice the trajectory is constantly corrected by GPS whey you set "poseCovThreshold" to 1.0.
+  - **Using GPS:** The park dataset is provided for testing LIO-SAM with GPS data. This dataset is gathered by [Yewei Huang](https://robustfieldautonomylab.github.io/people.html). To enable the GPS function, change "gpsTopic" in "params.yaml" to "odometry/gps". In Rviz, uncheck "Map (cloud)" and check "Map (global)". Also check "Odom GPS", which visualizes the GPS odometry. "gpsCovThreshold" can be adjusted to filter bad GPS readings. "poseCovThreshold" can be used to adjust the frequency of adding GPS factor to the graph. For example, you will notice the trajectory is constantly corrected by GPS whey you set "poseCovThreshold" to 1.0. Because of the heavy iSAM optimization, it's recommended that the playback speed is "-r 1".
+
+<p align='center'>
+    <img src="./config/doc/gps-demo.gif" alt="drawing" width="400"/>
+</p>
 
   - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. More discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
 
