@@ -110,6 +110,9 @@ The user needs to prepare the point cloud data in the correct format for cloud d
       - [**Campus dataset (large)**](https://drive.google.com/file/d/1q4Sf7s2veVc7bs08Qeha3stOiwsytopL/view?usp=sharing)
       - [**Campus dataset (small)**](https://drive.google.com/file/d/1_V-cFMTQ4RO-_16mU9YPUE8ozsPeddCv/view?usp=sharing)
 
+  * Ouster (OS1-128) dataset. No extrincis need to be changed for this dataset if you are using the default settings. Please follow the Ouster notes below to configure the package to run with Ouster data. A video of the dataset can be found on [YouTube](https://youtu.be/O7fKgZQzkEo).
+    -[**Rooftop dataset**](https://drive.google.com/file/d/1Qy2rZdPudFhDbATPpblioBb8fRtjDGQj/view?usp=sharing)
+
 ## Run the package
 
 1. Run the launch file:
@@ -136,7 +139,25 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/gps-demo.gif" alt="drawing" width="400"/>
 </p>
 
-  - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. More discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
+  - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. Interested users can find more discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
+
+  - **Ouster lidar:** To make LIO-SAM work with Ouster lidar, some preparations needs to be done on hardware and software level.
+    - Hardware:
+      - Use an external IMU. LIO-SAM does not work with the internal 6-axis IMU of Ouster lidar. You need to attach a 9-axis IMU to the lidar and perform data-gathering.
+      - Configure the driver. Change "timestamp_mode" in your Ouster launch file to "TIME_FROM_PTP_1588" so you can have ROS format timestamp for the point clouds.
+    - Software:
+      - Change "timeField" in "params.yaml" to "t". "t" is the point timestamp in a scan for Ouster lidar.
+      - Change "N_SCAN" and "Horizon_SCAN" in "params.yaml" according to your lidar, i.e., N_SCAN=128, Horizon_SCAN=1024.
+      - Comment the point definition for Velodyne on top of "imageProjection.cpp".
+      - Uncomment the point definition for Ouster on top of "imageProjection.cpp".
+      - Comment line "deskewPoint(&thisPoint, laserCloudIn->points[i].time)" in "imageProjection.cpp".
+      - Uncomment line "deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0" in "imageProjection.cpp".
+      - Run "catkin_make" to re-compile the package.
+
+<p align='center'>
+    <img src="./config/doc/ouster-device.jpg" alt="drawing" width="200"/>
+    <img src="./config/doc/ouster-demo.gif" alt="drawing" width="200"/>
+</p>
 
 ## Paper 
 
@@ -161,11 +182,6 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
   organization={IEEE}
 }
 ```
-
-## TODO
-
-  - [ ] Support Ouster lidar (in 12 hours)
-  - [ ] Share Ouster lidar dataset
 
 ## Acknowledgement
 

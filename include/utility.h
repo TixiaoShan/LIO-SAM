@@ -80,6 +80,7 @@ public:
     // Velodyne Sensor Configuration: Velodyne
     int N_SCAN;
     int Horizon_SCAN;
+    string timeField;
 
     // IMU
     float imuAccNoise;
@@ -151,6 +152,7 @@ public:
 
         nh.param<int>("lio_sam/N_SCAN", N_SCAN, 16);
         nh.param<int>("lio_sam/Horizon_SCAN", Horizon_SCAN, 1800);
+        nh.param<std::string>("lio_sam/timeField", timeField, "time");
 
         nh.param<float>("lio_sam/imuAccNoise", imuAccNoise, 0.01);
         nh.param<float>("lio_sam/imuGyrNoise", imuGyrNoise, 0.001);
