@@ -155,8 +155,8 @@ rosbag play your-bag.bag -r 3
       - Run "catkin_make" to re-compile the package.
 
 <p align='center'>
-    <img src="./config/doc/ouster-device.jpg" alt="drawing" width="200"/>
-    <img src="./config/doc/ouster-demo.gif" alt="drawing" width="200"/>
+    <img src="./config/doc/ouster-device.jpg" alt="drawing" width="300"/>
+    <img src="./config/doc/ouster-demo.gif" alt="drawing" width="300"/>
 </p>
 
 ## Paper 
