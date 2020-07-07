@@ -164,7 +164,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## TODO
 
-  - [ ] Support Ouster lidar (hardware ready, no official Ouster driver yet, no ETA from Ouster)
+  - [ ] Support Ouster lidar (in 12 hours)
   - [ ] Share Ouster lidar dataset
 
 ## Acknowledgement
