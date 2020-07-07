@@ -17,7 +17,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRT,
 )
 
 // Ouster
-// struct EIGEN_ALIGN16 PointXYZIRT {
+// struct PointXYZIRT {
 //     PCL_ADD_POINT4D;
 //     float intensity;
 //     uint32_t t;
