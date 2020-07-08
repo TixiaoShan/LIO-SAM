@@ -82,8 +82,6 @@ public:
     pcl::PointCloud<PointType>::Ptr cloudKeyPoses3D;
     pcl::PointCloud<PointTypePose>::Ptr cloudKeyPoses6D;
 
-    pcl::PointCloud<PointType>::Ptr laserCloudCornerLast; // corner feature set from odoOptimization
-    pcl::PointCloud<PointType>::Ptr laserCloudSurfLast; // surf feature set from odoOptimization
     pcl::PointCloud<PointType>::Ptr laserCloudCornerLastDS; // downsampled corner featuer set from odoOptimization
     pcl::PointCloud<PointType>::Ptr laserCloudSurfLastDS; // downsampled surf featuer set from odoOptimization
 
@@ -122,8 +120,6 @@ public:
     float transformTobeMapped[6];
 
     std::mutex mtx;
-
-    double timeLastProcessing = -1;
 
     bool isDegenerate = false;
     Eigen::Matrix<float, 6, 6> matP;
@@ -178,8 +174,6 @@ public:
         kdtreeSurroundingKeyPoses.reset(new pcl::KdTreeFLANN<PointType>());
         kdtreeHistoryKeyPoses.reset(new pcl::KdTreeFLANN<PointType>());
 
-        laserCloudCornerLast.reset(new pcl::PointCloud<PointType>()); // corner feature set from odoOptimization
-        laserCloudSurfLast.reset(new pcl::PointCloud<PointType>()); // surf feature set from odoOptimization
         laserCloudCornerLastDS.reset(new pcl::PointCloud<PointType>()); // downsampled corner featuer set from odoOptimization
         laserCloudSurfLastDS.reset(new pcl::PointCloud<PointType>()); // downsampled surf featuer set from odoOptimization
 
@@ -222,31 +216,26 @@ public:
 
         // extract info and feature cloud
         cloudInfo = *msgIn;
-        pcl::fromROSMsg(msgIn->cloud_corner,  *laserCloudCornerLast);
-        pcl::fromROSMsg(msgIn->cloud_surface, *laserCloudSurfLast);
+        pcl::fromROSMsg(msgIn->cloud_corner,  *laserCloudCornerLastDS);
+        pcl::fromROSMsg(msgIn->cloud_surface, *laserCloudSurfLastDS);
+        laserCloudCornerLastDSNum = laserCloudCornerLastDS->size();
+        laserCloudSurfLastDSNum = laserCloudSurfLastDS->size();
 
         std::lock_guard<std::mutex> lock(mtx);
 
-        if (timeLaserCloudInfoLast - timeLastProcessing >= mappingProcessInterval) {
+        updateInitialGuess();
 
-            timeLastProcessing = timeLaserCloudInfoLast;
+        extractSurroundingKeyFrames();
 
-            updateInitialGuess();
+        scan2MapOptimization();
 
-            extractSurroundingKeyFrames();
+        saveKeyFramesAndFactor();
 
-            downsampleCurrentScan();
+        correctPoses();
 
-            scan2MapOptimization();
+        publishOdometry();
 
-            saveKeyFramesAndFactor();
-
-            correctPoses();
-
-            publishOdometry();
-
-            publishFrames();
-        }
+        publishFrames();
     }
 
     void gpsHandler(const nav_msgs::Odometry::ConstPtr& gpsMsg)
@@ -749,20 +738,6 @@ public:
         } else {
             extractNearby();
         }
-    }
-
-    void downsampleCurrentScan()
-    {
-        // Downsample cloud from current scan
-        laserCloudCornerLastDS->clear();
-        downSizeFilterCorner.setInputCloud(laserCloudCornerLast);
-        downSizeFilterCorner.filter(*laserCloudCornerLastDS);
-        laserCloudCornerLastDSNum = laserCloudCornerLastDS->size();
-
-        laserCloudSurfLastDS->clear();
-        downSizeFilterSurf.setInputCloud(laserCloudSurfLast);
-        downSizeFilterSurf.filter(*laserCloudSurfLastDS);
-        laserCloudSurfLastDSNum = laserCloudSurfLastDS->size();
     }
 
     void updatePointAssociateToMap()
