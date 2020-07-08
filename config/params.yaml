@@ -50,6 +50,7 @@ lio_sam:
   surfFeatureMinValidNum: 100
 
   # voxel filter paprams
+  odometrySurfLeafSize: 0.4                     # default: 0.4
   mappingCornerLeafSize: 0.2                    # default: 0.2
   mappingSurfLeafSize: 0.4                      # default: 0.4
 

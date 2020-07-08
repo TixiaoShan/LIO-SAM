@@ -25,13 +25,9 @@ public:
 
     pcl::PointCloud<PointType>::Ptr extractedCloud;
     pcl::PointCloud<PointType>::Ptr cornerCloud;
-    pcl::PointCloud<PointType>::Ptr cornerCloudDS;
     pcl::PointCloud<PointType>::Ptr surfaceCloud;
-    pcl::PointCloud<PointType>::Ptr surfaceCloudDS;
 
-    pcl::VoxelGrid<PointType> downSizeFilterSimple;
-    pcl::VoxelGrid<PointType> downSizeFilterCorner;
-    pcl::VoxelGrid<PointType> downSizeFilterSurf;
+    pcl::VoxelGrid<PointType> downSizeFilter;
 
     lio_sam::cloud_info cloudInfo;
     std_msgs::Header cloudHeader;
@@ -56,15 +52,11 @@ public:
     {
         cloudSmoothness.resize(N_SCAN*Horizon_SCAN);
 
-        downSizeFilterSimple.setLeafSize(0.2, 0.2, 0.2);
-        downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
-        downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
+        downSizeFilter.setLeafSize(odometrySurfLeafSize, odometrySurfLeafSize, odometrySurfLeafSize);
 
         extractedCloud.reset(new pcl::PointCloud<PointType>());
         cornerCloud.reset(new pcl::PointCloud<PointType>());
-        cornerCloudDS.reset(new pcl::PointCloud<PointType>());
         surfaceCloud.reset(new pcl::PointCloud<PointType>());
-        surfaceCloudDS.reset(new pcl::PointCloud<PointType>());
 
         cloudCurvature = new float[N_SCAN*Horizon_SCAN];
         cloudNeighborPicked = new int[N_SCAN*Horizon_SCAN];
@@ -75,13 +67,6 @@ public:
     {
         cloudInfo = *msgIn; // new cloud info
         cloudHeader = msgIn->header; // new cloud header
-
-        static double timeLastProcessing = -1;
-        if (cloudHeader.stamp.toSec() - timeLastProcessing >= mappingProcessInterval)
-            timeLastProcessing = cloudHeader.stamp.toSec();
-        else
-            return;
-
         pcl::fromROSMsg(msgIn->cloud_deskewed, *extractedCloud); // new cloud for extraction
 
         calculateSmoothness();
@@ -245,8 +230,8 @@ public:
             }
 
             surfaceCloudScanDS->clear();
-            downSizeFilterSimple.setInputCloud(surfaceCloudScan);
-            downSizeFilterSimple.filter(*surfaceCloudScanDS);
+            downSizeFilter.setInputCloud(surfaceCloudScan);
+            downSizeFilter.filter(*surfaceCloudScanDS);
 
             *surfaceCloud += *surfaceCloudScanDS;
         }
@@ -264,17 +249,9 @@ public:
     {
         // free cloud info memory
         freeCloudInfoMemory();
-        // downsample features
-        cornerCloudDS->clear();
-        downSizeFilterCorner.setInputCloud(cornerCloud);
-        downSizeFilterCorner.filter(*cornerCloudDS);
-
-        surfaceCloudDS->clear();
-        downSizeFilterSurf.setInputCloud(surfaceCloud);
-        downSizeFilterSurf.filter(*surfaceCloudDS);
         // save newly extracted features
-        cloudInfo.cloud_corner  = publishCloud(&pubCornerPoints,  cornerCloudDS,  cloudHeader.stamp, "base_link");
-        cloudInfo.cloud_surface = publishCloud(&pubSurfacePoints, surfaceCloudDS, cloudHeader.stamp, "base_link");
+        cloudInfo.cloud_corner  = publishCloud(&pubCornerPoints,  cornerCloud,  cloudHeader.stamp, "base_link");
+        cloudInfo.cloud_surface = publishCloud(&pubSurfacePoints, surfaceCloud, cloudHeader.stamp, "base_link");
         // publish to mapOptimization
         pubLaserCloudInfo.publish(cloudInfo);
     }
