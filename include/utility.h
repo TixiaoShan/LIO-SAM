@@ -81,6 +81,7 @@ public:
     int N_SCAN;
     int Horizon_SCAN;
     string timeField;
+    int downsampleRate;
 
     // IMU
     float imuAccNoise;
@@ -153,6 +154,7 @@ public:
         nh.param<int>("lio_sam/N_SCAN", N_SCAN, 16);
         nh.param<int>("lio_sam/Horizon_SCAN", Horizon_SCAN, 1800);
         nh.param<std::string>("lio_sam/timeField", timeField, "time");
+        nh.param<int>("lio_sam/downsampleRate", downsampleRate, 1);
 
         nh.param<float>("lio_sam/imuAccNoise", imuAccNoise, 0.01);
         nh.param<float>("lio_sam/imuGyrNoise", imuGyrNoise, 0.001);

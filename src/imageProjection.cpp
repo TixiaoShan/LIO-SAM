@@ -507,6 +507,9 @@ public:
             if (rowIdn < 0 || rowIdn >= N_SCAN)
                 continue;
 
+            if (rowIdn % downsampleRate != 0)
+                continue;
+
             float horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
 
             float ang_res_x = 360.0/float(Horizon_SCAN);
