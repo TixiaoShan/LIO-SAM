@@ -182,7 +182,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 100
+          Max Intensity: 118
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Velodyne
@@ -209,10 +209,10 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: Intensity
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 107
+          Max Intensity: 104
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Reg Cloud
@@ -226,7 +226,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
       Enabled: true
       Name: Point Cloud
     - Class: rviz/Group
@@ -310,7 +310,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 107
+          Max Intensity: 123
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Map (cloud)
@@ -449,7 +449,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 46.1163635
+      Distance: 57.5358086
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -464,10 +464,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.995397985
+      Pitch: 0.995398104
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 0.180398613
+      Yaw: 1.79352248
     Saved: ~
 Window Geometry:
   Displays:
