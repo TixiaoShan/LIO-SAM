@@ -199,7 +199,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## TODO
 
-  - [ ]
+  - [ ] Add loop closure visualization and fix potential bug
 
 ## Acknowledgement
 
