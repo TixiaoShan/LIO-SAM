@@ -443,7 +443,7 @@ public:
         if (loopClosureEnableFlag == false)
             return;
 
-        ros::Rate rate(1);
+        ros::Rate rate(0.5);
         while (ros::ok())
         {
             rate.sleep();

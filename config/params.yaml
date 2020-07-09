@@ -20,7 +20,7 @@ lio_sam:
   N_SCAN: 16                                  # number of lidar channel (i.e., 16, 32, 64, 128)
   Horizon_SCAN: 1800                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048)
   timeField: "time"                           # point timestamp field, Velodyne - "time", Ouster - "t"
-  downsampleRate: 4                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1 
+  downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1 
 
   # IMU Settings
   imuAccNoise: 3.9939570888238808e-03
@@ -70,7 +70,7 @@ lio_sam:
   surroundingKeyframeSearchRadius: 50.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
 
   # Loop closure
-  loopClosureEnableFlag: false
+  loopClosureEnableFlag: true
   surroundingKeyframeSize: 25                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
   historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be considered for loop closure

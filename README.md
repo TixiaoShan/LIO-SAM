@@ -113,6 +113,9 @@ The user needs to prepare the point cloud data in the correct format for cloud d
   * Ouster (OS1-128) dataset. No extrinsics need to be changed for this dataset if you are using the default settings. Please follow the Ouster notes below to configure the package to run with Ouster data. A video of the dataset can be found on [YouTube](https://youtu.be/O7fKgZQzkEo):
     - [**Rooftop dataset**](https://drive.google.com/file/d/1Qy2rZdPudFhDbATPpblioBb8fRtjDGQj/view?usp=sharing)
 
+  * KITTI dataset. The extrinsics can be found in the Notes KITTI section below. To generate more bags using other KITTI raw data, you can use the python script provided in "config/doc/kitti2bag".
+    - [**2011_09_30_drive_0028**](https://drive.google.com/file/d/12h3ooRAZVTjoMrf3uv1_KriEXm33kHc7/view?usp=sharing)
+
 ## Run the package
 
 1. Run the launch file:
@@ -139,7 +142,18 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/gps-demo.gif" alt="drawing" width="400"/>
 </p>
 
-  - **KITTI dataset:** Testing with the KITTI dataset with LIO-SAM can be problematic. LIO-SAM needs a very good IMU source to function properly. The KITTI odometry sequence gives no IMU data. The KITTI raw synced dataset only gives IMU data at 10Hz, which is impossible to perform IMU pre-integration during a lidar scan. Though the KITTI raw unsynced dataset gives IMU data at 100Hz, the timestamps of the data is inconsistent, which causes pre-integration failure. Testing LIO-SAM with KITTI dataset is very similar to testing VINS-Mono with it. Interested users can find more discussions about this problem can be found [here](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/222).
+  - **KITTI:** Since LIO-SAM needs a high-frequency IMU for function properly, we need to use KITTI raw data for testing. One problem remains unsolved is that the intrinsics of the IMU is unknown, which has a big impact on the accuracy of LIO-SAM. Download the provided sample data and make the following changes in "params.yaml":
+    - extrinsicTrans: [-8.086759e-01, 3.195559e-01, -7.997231e-01] 
+    - extrinsicRot: [9.999976e-01, 7.553071e-04, -2.035826e-03, -7.854027e-04, 9.998898e-01, -1.482298e-02, 2.024406e-03, 1.482454e-02, 9.998881e-01]
+    - extrinsicRPY: [9.999976e-01, 7.553071e-04, -2.035826e-03, -7.854027e-04, 9.998898e-01, -1.482298e-02, 2.024406e-03, 1.482454e-02, 9.998881e-01]
+    - N_SCAN: 64
+    - downsampleRate: 2 or 4
+    - loopClosureEnableFlag: true or false
+
+<p align='center'>
+    <img src="./config/doc/kitti-map.png" alt="drawing" width="300"/>
+    <img src="./config/doc/kitti-demo.gif" alt="drawing" width="300"/>
+</p>
 
   - **Ouster lidar:** To make LIO-SAM work with Ouster lidar, some preparations needs to be done on hardware and software level.
     - Hardware:
