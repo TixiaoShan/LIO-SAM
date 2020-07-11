@@ -634,29 +634,29 @@ public:
         }
 
         // use previous pose for pose guess
-        if (cloudKeyPoses6D->points.size() >= 2)
-        {
-            int oldId = cloudKeyPoses6D->points.size() - 2;
-            int preId = cloudKeyPoses6D->points.size() - 1;
-            Eigen::Affine3f transOld = pclPointToAffine3f(cloudKeyPoses6D->points[oldId]);
-            Eigen::Affine3f transPre = pclPointToAffine3f(cloudKeyPoses6D->points[preId]);
-            double deltaTimePre = cloudKeyPoses6D->points[preId].time - cloudKeyPoses6D->points[oldId].time;
-            double deltaTimeNow = timeLaserCloudInfoLast - cloudKeyPoses6D->points[preId].time;
-            double alpha = deltaTimeNow / deltaTimePre;
+        // if (cloudKeyPoses6D->points.size() >= 2)
+        // {
+        //     int oldId = cloudKeyPoses6D->points.size() - 2;
+        //     int preId = cloudKeyPoses6D->points.size() - 1;
+        //     Eigen::Affine3f transOld = pclPointToAffine3f(cloudKeyPoses6D->points[oldId]);
+        //     Eigen::Affine3f transPre = pclPointToAffine3f(cloudKeyPoses6D->points[preId]);
+        //     double deltaTimePre = cloudKeyPoses6D->points[preId].time - cloudKeyPoses6D->points[oldId].time;
+        //     double deltaTimeNow = timeLaserCloudInfoLast - cloudKeyPoses6D->points[preId].time;
+        //     double alpha = deltaTimeNow / deltaTimePre;
 
-            Eigen::Affine3f transIncPre = transOld.inverse() * transPre;
-            float x, y, z, roll, pitch, yaw;
-            pcl::getTranslationAndEulerAngles (transIncPre, x, y, z, roll, pitch, yaw);
-            Eigen::Affine3f transIncNow = pcl::getTransformation(alpha*x, alpha*y, alpha*z, alpha*roll, alpha*pitch, alpha*yaw);
+        //     Eigen::Affine3f transIncPre = transOld.inverse() * transPre;
+        //     float x, y, z, roll, pitch, yaw;
+        //     pcl::getTranslationAndEulerAngles (transIncPre, x, y, z, roll, pitch, yaw);
+        //     Eigen::Affine3f transIncNow = pcl::getTransformation(alpha*x, alpha*y, alpha*z, alpha*roll, alpha*pitch, alpha*yaw);
 
-            Eigen::Affine3f transTobe = trans2Affine3f(transformTobeMapped);
-            Eigen::Affine3f transFinal = transTobe * transIncNow;
-            pcl::getTranslationAndEulerAngles(transFinal, transformTobeMapped[3], transformTobeMapped[4], transformTobeMapped[5], 
-                                                          transformTobeMapped[0], transformTobeMapped[1], transformTobeMapped[2]);
+        //     Eigen::Affine3f transTobe = trans2Affine3f(transformTobeMapped);
+        //     Eigen::Affine3f transFinal = transTobe * transIncNow;
+        //     pcl::getTranslationAndEulerAngles(transFinal, transformTobeMapped[3], transformTobeMapped[4], transformTobeMapped[5], 
+        //                                                   transformTobeMapped[0], transformTobeMapped[1], transformTobeMapped[2]);
 
-            lastImuTransformation = pcl::getTransformation(0, 0, 0, cloudInfo.imuRollInit, cloudInfo.imuPitchInit, cloudInfo.imuYawInit); // save imu before return;
-            return;
-        }    
+        //     lastImuTransformation = pcl::getTransformation(0, 0, 0, cloudInfo.imuRollInit, cloudInfo.imuPitchInit, cloudInfo.imuYawInit); // save imu before return;
+        //     return;
+        // }    
 
         // use imu incremental estimation for pose guess (only rotation)
         if (cloudInfo.imuAvailable == true)
