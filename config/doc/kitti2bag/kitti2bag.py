@@ -417,8 +417,9 @@ if __name__ == "__main__":
             save_imu_data_raw(bag, kitti, imu_frame_id, imu_raw_topic)
             save_gps_fix_data(bag, kitti, imu_frame_id, gps_fix_topic)
             save_gps_vel_data(bag, kitti, imu_frame_id, gps_vel_topic)
-            # for camera in cameras:
-            #     save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera=camera[0], camera_frame_id=camera[1], topic=camera[2], initial_time=None)
+            for camera in cameras:
+                save_camera_data(bag, args.kitti_type, kitti, util, bridge, camera=camera[0], camera_frame_id=camera[1], topic=camera[2], initial_time=None)
+                break
             save_velo_data(bag, kitti, velo_frame_id, velo_topic)
 
         finally:

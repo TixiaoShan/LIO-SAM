@@ -443,7 +443,7 @@ public:
         if (loopClosureEnableFlag == false)
             return;
 
-        ros::Rate rate(0.5);
+        ros::Rate rate(0.1);
         while (ros::ok())
         {
             rate.sleep();
@@ -1396,7 +1396,7 @@ public:
     void updatePath(const PointTypePose& pose_in)
     {
         geometry_msgs::PoseStamped pose_stamped;
-        pose_stamped.header.stamp = timeLaserInfoStamp;
+        pose_stamped.header.stamp = ros::Time().fromSec(pose_in.time);
         pose_stamped.header.frame_id = "odom";
         pose_stamped.pose.position.x = pose_in.x;
         pose_stamped.pose.position.y = pose_in.y;
