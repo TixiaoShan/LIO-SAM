@@ -534,10 +534,10 @@ public:
             // if (thisPoint.z < -2.0)
             //     continue;
 
-            rangeMat.at<float>(rowIdn, columnIdn) = range;
-
             thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].time); // Velodyne
             // thisPoint = deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0); // Ouster
+
+            rangeMat.at<float>(rowIdn, columnIdn) = pointDistance(thisPoint);
 
             int index = columnIdn  + rowIdn * Horizon_SCAN;
             fullCloud->points[index] = thisPoint;
