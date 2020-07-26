@@ -337,7 +337,7 @@ public:
     {
         sensor_msgs::Imu thisImu = imuConverter(*imu_raw);
         // publish static tf
-        tfMap2Odom.sendTransform(tf::StampedTransform(map_to_odom, thisImu.header.stamp, "map", "odom"));
+        tfMap2Odom.sendTransform(tf::StampedTransform(map_to_odom, thisImu.header.stamp, mapFrame, odometryFrame));
 
         imuQueOpt.push_back(thisImu);
         imuQueImu.push_back(thisImu);
@@ -359,7 +359,7 @@ public:
         // publish odometry
         nav_msgs::Odometry odometry;
         odometry.header.stamp = thisImu.header.stamp;
-        odometry.header.frame_id = "odom";
+        odometry.header.frame_id = odometryFrame;
         odometry.child_frame_id = "odom_imu";
 
         // transform imu pose to ldiar
@@ -391,7 +391,7 @@ public:
             last_path_time = imuTime;
             geometry_msgs::PoseStamped pose_stamped;
             pose_stamped.header.stamp = thisImu.header.stamp;
-            pose_stamped.header.frame_id = "odom";
+            pose_stamped.header.frame_id = odometryFrame;
             pose_stamped.pose = odometry.pose.pose;
             imuPath.poses.push_back(pose_stamped);
             while(!imuPath.poses.empty() && abs(imuPath.poses.front().header.stamp.toSec() - imuPath.poses.back().header.stamp.toSec()) > 3.0)
@@ -399,7 +399,7 @@ public:
             if (pubImuPath.getNumSubscribers() != 0)
             {
                 imuPath.header.stamp = thisImu.header.stamp;
-                imuPath.header.frame_id = "odom";
+                imuPath.header.frame_id = odometryFrame;
                 pubImuPath.publish(imuPath);
             }
         }
@@ -407,7 +407,7 @@ public:
         // publish transformation
         tf::Transform tCur;
         tf::poseMsgToTF(odometry.pose.pose, tCur);
-        tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, thisImu.header.stamp, "odom", "base_link");
+        tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, thisImu.header.stamp, odometryFrame, lidarFrame);
         tfOdom2BaseLink.sendTransform(odom_2_baselink);
     }
 };
