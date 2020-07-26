@@ -204,6 +204,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 ## TODO
 
   - [ ] Add loop closure visualization and fix potential bug
+  - [ ] **KNOWN ISSUE:** when loop closure happens or GPS factor is added, imuPreintegrtation will be reset. This will cause brief loss of updateInitialGuess in mapOptimization. If the sensor is moving or rotating fast, scan-matching will fail. A way to solve this is find a good initial guess replacement when imuPreintegrtation is reset.
 
 ## Acknowledgement
 
