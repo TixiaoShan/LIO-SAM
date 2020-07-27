@@ -679,7 +679,7 @@ public:
         // use imu pre-integration estimation for pose guess
         static bool lastImuPreTransAvailable = false;
         static Eigen::Affine3f lastImuPreTransformation;
-        if (cloudInfo.odomAvailable == true && cloudInfo.imuPreintegrationResetId == imuPreintegrationResetId)
+        if (cloudInfo.odomAvailable == true)// && cloudInfo.imuPreintegrationResetId == imuPreintegrationResetId)
         {
             Eigen::Affine3f transBack = pcl::getTransformation(cloudInfo.initialGuessX,    cloudInfo.initialGuessY,     cloudInfo.initialGuessZ, 
                                                                cloudInfo.initialGuessRoll, cloudInfo.initialGuessPitch, cloudInfo.initialGuessYaw);
@@ -1372,14 +1372,14 @@ public:
         isam->update(gtSAMgraph, initialEstimate);
         isam->update();
 
-        // if (aLoopIsClosed == true)
-        // {
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        //     isam->update();
-        // }
+        if (aLoopIsClosed == true)
+        {
+            isam->update();
+            isam->update();
+            isam->update();
+            isam->update();
+            isam->update();
+        }
 
         gtSAMgraph.resize(0);
         initialEstimate.clear();
