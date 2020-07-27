@@ -179,10 +179,10 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: Intensity
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 245
+          Max Intensity: 135
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Velodyne
@@ -196,7 +196,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -310,7 +310,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 130
+          Max Intensity: 108
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Map (cloud)
@@ -328,8 +328,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 23.9825306
-            Min Value: -2.44742775
+            Max Value: 36.6103439
+            Min Value: -2.34769773
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -411,8 +411,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 37.4779892
-            Min Value: -2.43941641
+            Max Value: 20.8028374
+            Min Value: -0.0393450707
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -420,7 +420,7 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: AxisColor
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Max Intensity: 15.1006041
@@ -437,7 +437,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
           Enabled: true
           Marker Topic: /lio_sam/mapping/loop_closure_constraints
@@ -479,10 +479,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.04039812
+      Pitch: 1.06539822
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 4.05668163
+      Yaw: 3.79167652
     Saved: ~
 Window Geometry:
   Displays:
