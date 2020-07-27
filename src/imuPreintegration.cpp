@@ -24,6 +24,8 @@ class IMUPreintegration : public ParamServer
 {
 public:
 
+    std::mutex mtx;
+
     ros::Subscriber subImu;
     ros::Subscriber subOdometry;
     ros::Publisher pubImuOdometry;
@@ -72,7 +74,9 @@ public:
     int imuPreintegrationResetId = 0;
 
     gtsam::Pose3 imu2Lidar = gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0), gtsam::Point3(-extTrans.x(), -extTrans.y(), -extTrans.z()));
-    gtsam::Pose3 lidar2Imu = gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0), gtsam::Point3(extTrans.x(), extTrans.y(), extTrans.z()));;
+    gtsam::Pose3 lidar2Imu = gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0), gtsam::Point3(extTrans.x(), extTrans.y(), extTrans.z()));
+
+    bool pubTFFlag = true;
 
     IMUPreintegration()
     {
@@ -100,6 +104,14 @@ public:
         imuIntegratorOpt_ = new gtsam::PreintegratedImuMeasurements(p, prior_imu_bias); // setting up the IMU integration for optimization        
     }
 
+    void incrementalSetting()
+    {
+        // configure this class to publish incremental odometry (no pose correction)
+        subOdometry = nh.subscribe<nav_msgs::Odometry>("lio_sam/mapping/odometry_incremental", 5, &IMUPreintegration::odometryHandler, this, ros::TransportHints().tcpNoDelay());
+        pubImuOdometry = nh.advertise<nav_msgs::Odometry> (odomTopic+"_incremental", 2000);
+        pubTFFlag = false;
+    }
+
     void resetOptimization()
     {
         gtsam::ISAM2Params optParameters;
@@ -123,6 +135,8 @@ public:
 
     void odometryHandler(const nav_msgs::Odometry::ConstPtr& odomMsg)
     {
+        std::lock_guard<std::mutex> lock(mtx);
+
         double currentCorrectionTime = ROS_TIME(odomMsg);
 
         // make sure we have imu data to integrate
@@ -335,9 +349,12 @@ public:
 
     void imuHandler(const sensor_msgs::Imu::ConstPtr& imu_raw)
     {
+        std::lock_guard<std::mutex> lock(mtx);
+
         sensor_msgs::Imu thisImu = imuConverter(*imu_raw);
         // publish static tf
-        tfMap2Odom.sendTransform(tf::StampedTransform(map_to_odom, thisImu.header.stamp, mapFrame, odometryFrame));
+        if (pubTFFlag)
+            tfMap2Odom.sendTransform(tf::StampedTransform(map_to_odom, thisImu.header.stamp, mapFrame, odometryFrame));
 
         imuQueOpt.push_back(thisImu);
         imuQueImu.push_back(thisImu);
@@ -386,7 +403,7 @@ public:
         // publish imu path
         static nav_msgs::Path imuPath;
         static double last_path_time = -1;
-        if (imuTime - last_path_time > 0.1)
+        if (imuTime - last_path_time > 0.1 && pubTFFlag)
         {
             last_path_time = imuTime;
             geometry_msgs::PoseStamped pose_stamped;
@@ -405,10 +422,13 @@ public:
         }
 
         // publish transformation
-        tf::Transform tCur;
-        tf::poseMsgToTF(odometry.pose.pose, tCur);
-        tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, thisImu.header.stamp, odometryFrame, lidarFrame);
-        tfOdom2BaseLink.sendTransform(odom_2_baselink);
+        if (pubTFFlag)
+        {
+            tf::Transform tCur;
+            tf::poseMsgToTF(odometry.pose.pose, tCur);
+            tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, thisImu.header.stamp, odometryFrame, lidarFrame);
+            tfOdom2BaseLink.sendTransform(odom_2_baselink);
+        }
     }
 };
 
@@ -417,11 +437,15 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "roboat_loam");
     
-    IMUPreintegration ImuP;
+    IMUPreintegration ImuP_global;
+
+    IMUPreintegration ImuP_incremental;
+    ImuP_incremental.incrementalSetting();
 
     ROS_INFO("\033[1;32m----> IMU Preintegration Started.\033[0m");
     
-    ros::spin();
+    ros::MultiThreadedSpinner spinner(4);
+    spinner.spin();
     
     return 0;
 }
