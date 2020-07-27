@@ -8,6 +8,7 @@ lio_sam:
 
   # Frames
   lidarFrame: "base_link"
+  baselinkFrame: "base_link"
   odometryFrame: "odom"
   mapFrame: "map"
 
