@@ -460,6 +460,7 @@ public:
         {
             rate.sleep();
             performLoopClosure();
+            visualizeLoopClosure();
         }
     }
 
@@ -593,56 +594,58 @@ public:
         loopNoiseQueue.push_back(constraintNoise);
         mtx.unlock();
 
-        // visualize loop constriant
+        // add loop constriant
         loopIndexContainer[latestFrameIDLoopCloure] = closestHistoryFrameID;
+    }
+
+    void visualizeLoopClosure()
+    {
+        visualization_msgs::MarkerArray markerArray;
+        // loop nodes
+        visualization_msgs::Marker markerNode;
+        markerNode.header.frame_id = "odom";
+        markerNode.header.stamp = timeLaserInfoStamp;
+        markerNode.action = visualization_msgs::Marker::ADD;
+        markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
+        markerNode.ns = "loop_nodes";
+        markerNode.id = 0;
+        markerNode.pose.orientation.w = 1;
+        markerNode.scale.x = 0.3; markerNode.scale.y = 0.3; markerNode.scale.z = 0.3; 
+        markerNode.color.r = 0; markerNode.color.g = 0.8; markerNode.color.b = 1;
+        markerNode.color.a = 1;
+        // loop edges
+        visualization_msgs::Marker markerEdge;
+        markerEdge.header.frame_id = "odom";
+        markerEdge.header.stamp = timeLaserInfoStamp;
+        markerEdge.action = visualization_msgs::Marker::ADD;
+        markerEdge.type = visualization_msgs::Marker::LINE_LIST;
+        markerEdge.ns = "loop_edges";
+        markerEdge.id = 1;
+        markerEdge.pose.orientation.w = 1;
+        markerEdge.scale.x = 0.1; markerEdge.scale.y = 0.1; markerEdge.scale.z = 0.1;
+        markerEdge.color.r = 0.9; markerEdge.color.g = 0.9; markerEdge.color.b = 0;
+        markerEdge.color.a = 1;
+
+        for (auto it = loopIndexContainer.begin(); it != loopIndexContainer.end(); ++it)
         {
-            visualization_msgs::MarkerArray markerArray;
-            // loop nodes
-            visualization_msgs::Marker markerNode;
-            markerNode.header.frame_id = "odom";
-            markerNode.header.stamp = timeLaserInfoStamp;
-            markerNode.action = visualization_msgs::Marker::ADD;
-            markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
-            markerNode.ns = "loop_nodes";
-            markerNode.id = 0;
-            markerNode.pose.orientation.w = 1;
-            markerNode.scale.x = 0.3; markerNode.scale.y = 0.3; markerNode.scale.z = 0.3; 
-            markerNode.color.r = 0; markerNode.color.g = 0.8; markerNode.color.b = 1;
-            markerNode.color.a = 1;
-            // loop edges
-            visualization_msgs::Marker markerEdge;
-            markerEdge.header.frame_id = "odom";
-            markerEdge.header.stamp = timeLaserInfoStamp;
-            markerEdge.action = visualization_msgs::Marker::ADD;
-            markerEdge.type = visualization_msgs::Marker::LINE_LIST;
-            markerEdge.ns = "loop_edges";
-            markerEdge.id = 1;
-            markerEdge.pose.orientation.w = 1;
-            markerEdge.scale.x = 0.1; markerEdge.scale.y = 0.1; markerEdge.scale.z = 0.1;
-            markerEdge.color.r = 0.9; markerEdge.color.g = 0.9; markerEdge.color.b = 0;
-            markerEdge.color.a = 1;
-
-            for (auto it = loopIndexContainer.begin(); it != loopIndexContainer.end(); ++it)
-            {
-                int key_cur = it->first;
-                int key_pre = it->second;
-                geometry_msgs::Point p;
-                p.x = copy_cloudKeyPoses6D->points[key_cur].x;
-                p.y = copy_cloudKeyPoses6D->points[key_cur].y;
-                p.z = copy_cloudKeyPoses6D->points[key_cur].z;
-                markerNode.points.push_back(p);
-                markerEdge.points.push_back(p);
-                p.x = copy_cloudKeyPoses6D->points[key_pre].x;
-                p.y = copy_cloudKeyPoses6D->points[key_pre].y;
-                p.z = copy_cloudKeyPoses6D->points[key_pre].z;
-                markerNode.points.push_back(p);
-                markerEdge.points.push_back(p);
-            }
-
-            markerArray.markers.push_back(markerNode);
-            markerArray.markers.push_back(markerEdge);
-            pubLoopConstraintEdge.publish(markerArray);
+            int key_cur = it->first;
+            int key_pre = it->second;
+            geometry_msgs::Point p;
+            p.x = copy_cloudKeyPoses6D->points[key_cur].x;
+            p.y = copy_cloudKeyPoses6D->points[key_cur].y;
+            p.z = copy_cloudKeyPoses6D->points[key_cur].z;
+            markerNode.points.push_back(p);
+            markerEdge.points.push_back(p);
+            p.x = copy_cloudKeyPoses6D->points[key_pre].x;
+            p.y = copy_cloudKeyPoses6D->points[key_pre].y;
+            p.z = copy_cloudKeyPoses6D->points[key_pre].z;
+            markerNode.points.push_back(p);
+            markerEdge.points.push_back(p);
         }
+
+        markerArray.markers.push_back(markerNode);
+        markerArray.markers.push_back(markerEdge);
+        pubLoopConstraintEdge.publish(markerArray);
     }
 
 
