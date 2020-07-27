@@ -137,7 +137,8 @@ rosbag play your-bag.bag -r 3
   - **Loop closure:** The loop function here gives an example of proof of concept. It is directly adapted from LeGO-LOAM loop closure. For more advanced loop closure implementation, please refer to [ScanContext](https://github.com/irapkaist/SC-LeGO-LOAM). Set the "loopClosureEnableFlag" in "params.yaml" to "true" to test the loop closure function. In Rviz, uncheck "Map (cloud)" and check "Map (global)". This is because the visualized map - "Map (cloud)" - is simply a stack of point clouds in Rviz. Their postion will not be updated after pose correction. The loop closure function here is simply adapted from LeGO-LOAM, which is an ICP-based method. Because ICP runs pretty slow, it is suggested that the playback speed is set to be "-r 1". You can try the Garden dataset for testing.
 
 <p align='center'>
-    <img src="./config/doc/loop-closure.gif" alt="drawing" width="400"/>
+    <img src="./config/doc/loop-closure.gif" alt="drawing" width="250"/>
+    <img src="./config/doc/loop-closure-2.gif" alt="drawing" width="250"/>
 </p>
 
   - **Using GPS:** The park dataset is provided for testing LIO-SAM with GPS data. This dataset is gathered by [Yewei Huang](https://robustfieldautonomylab.github.io/people.html). To enable the GPS function, change "gpsTopic" in "params.yaml" to "odometry/gps". In Rviz, uncheck "Map (cloud)" and check "Map (global)". Also check "Odom GPS", which visualizes the GPS odometry. "gpsCovThreshold" can be adjusted to filter bad GPS readings. "poseCovThreshold" can be used to adjust the frequency of adding GPS factor to the graph. For example, you will notice the trajectory is constantly corrected by GPS whey you set "poseCovThreshold" to 1.0. Because of the heavy iSAM optimization, it's recommended that the playback speed is "-r 1".
@@ -204,8 +205,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## TODO
 
-  - [ ] Add loop closure visualization and fix potential bug
-  - [ ] **KNOWN ISSUE:** when loop closure happens or GPS factor is added, imuPreintegrtation will be reset. This will cause brief loss of updateInitialGuess in mapOptimization. If the sensor is moving or rotating fast, scan-matching will fail. A way to solve this is find a good initial guess replacement when imuPreintegrtation is reset.
+  - [ ] To be added
 
 ## Acknowledgement
 
