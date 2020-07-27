@@ -306,13 +306,13 @@ Visualization Manager:
           Class: rviz/PointCloud2
           Color: 255; 255; 255
           Color Transformer: Intensity
-          Decay Time: 500
+          Decay Time: 300
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Max Intensity: 100
           Min Color: 0; 0; 0
-          Min Intensity: 0
+          Min Intensity: 1
           Name: Map (cloud)
           Position Transformer: XYZ
           Queue Size: 10
@@ -487,7 +487,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 57.5358086
+      Distance: 65.799942
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -505,7 +505,7 @@ Visualization Manager:
       Pitch: 1.00039816
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 1.79852247
+      Yaw: 0.443523765
     Saved: ~
 Window Geometry:
   Displays:

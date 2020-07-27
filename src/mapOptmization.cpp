@@ -138,6 +138,9 @@ public:
     bool aLoopIsClosed = false;
     int imuPreintegrationResetId = 0;
     map<int, int> loopIndexContainer; // from new to old
+    vector<pair<int, int>> loopIndexQueue;
+    vector<gtsam::Pose3> loopPoseQueue;
+    vector<gtsam::noiseModel::Diagonal::shared_ptr> loopNoiseQueue;
 
     nav_msgs::Path globalPath;
 
@@ -158,7 +161,7 @@ public:
         pubLaserOdometryIncremental = nh.advertise<nav_msgs::Odometry> ("lio_sam/mapping/odometry_incremental", 1);
         pubPath = nh.advertise<nav_msgs::Path>("lio_sam/mapping/path", 1);
 
-        subLaserCloudInfo = nh.subscribe<lio_sam::cloud_info>("lio_sam/feature/cloud_info", 10, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
+        subLaserCloudInfo = nh.subscribe<lio_sam::cloud_info>("lio_sam/feature/cloud_info", 1, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
         subGPS = nh.subscribe<nav_msgs::Odometry> (gpsTopic, 200, &mapOptimization::gpsHandler, this, ros::TransportHints().tcpNoDelay());
 
         pubHistoryKeyFrames = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_history_cloud", 1);
@@ -463,8 +466,13 @@ public:
 
     bool detectLoopClosure(int *latestID, int *closestID)
     {
-        int latestFrameIDLoopCloure;
-        int closestHistoryFrameID;
+        int latestFrameIDLoopCloure = copy_cloudKeyPoses3D->size() - 1;
+        int closestHistoryFrameID = -1;
+
+        // check loop constraint added before
+        auto it = loopIndexContainer.find(latestFrameIDLoopCloure);
+        if (it != loopIndexContainer.end())
+            return false;
 
         latestKeyFrameCloud->clear();
         nearHistoryKeyFrameCloud->clear();
@@ -475,7 +483,6 @@ public:
         kdtreeHistoryKeyPoses->setInputCloud(copy_cloudKeyPoses3D);
         kdtreeHistoryKeyPoses->radiusSearch(copy_cloudKeyPoses3D->back(), historyKeyframeSearchRadius, pointSearchIndLoop, pointSearchSqDisLoop, 0);
         
-        closestHistoryFrameID = -1;
         for (int i = 0; i < (int)pointSearchIndLoop.size(); ++i)
         {
             int id = pointSearchIndLoop[i];
@@ -489,18 +496,12 @@ public:
         if (closestHistoryFrameID == -1)
             return false;
 
-        if ((int)copy_cloudKeyPoses3D->size() - 1 == closestHistoryFrameID)
+        if (latestFrameIDLoopCloure == closestHistoryFrameID)
             return false;
 
         // save latest key frames
-        latestFrameIDLoopCloure = copy_cloudKeyPoses3D->size() - 1;
         *latestKeyFrameCloud += *transformPointCloud(cornerCloudKeyFrames[latestFrameIDLoopCloure], &copy_cloudKeyPoses6D->points[latestFrameIDLoopCloure]);
         *latestKeyFrameCloud += *transformPointCloud(surfCloudKeyFrames[latestFrameIDLoopCloure],   &copy_cloudKeyPoses6D->points[latestFrameIDLoopCloure]);
-
-        // check loop constraint added before
-        auto it = loopIndexContainer.find(latestFrameIDLoopCloure);
-        if (it != loopIndexContainer.end())
-            return false;
 
         // save history near key frames
         bool nearFrameAvailable = false;
@@ -538,7 +539,7 @@ public:
             return;
 
         // ICP Settings
-        pcl::IterativeClosestPoint<PointType, PointType> icp;
+        static pcl::IterativeClosestPoint<PointType, PointType> icp;
         icp.setMaxCorrespondenceDistance(historyKeyframeSearchRadius*2);
         icp.setMaximumIterations(100);
         icp.setTransformationEpsilon(1e-6);
@@ -587,10 +588,11 @@ public:
         noiseModel::Diagonal::shared_ptr constraintNoise = noiseModel::Diagonal::Variances(Vector6);
 
         // Add pose constraint
-        std::lock_guard<std::mutex> lock(mtx);
-        gtSAMgraph.add(BetweenFactor<Pose3>(latestFrameIDLoopCloure, closestHistoryFrameID, poseFrom.between(poseTo), constraintNoise));
-
-        aLoopIsClosed = true;
+        mtx.lock();
+        loopIndexQueue.push_back(make_pair(latestFrameIDLoopCloure, closestHistoryFrameID));
+        loopPoseQueue.push_back(poseFrom.between(poseTo));
+        loopNoiseQueue.push_back(constraintNoise);
+        mtx.unlock();
 
         // visualize loop constriant
         loopIndexContainer[latestFrameIDLoopCloure] = closestHistoryFrameID;
@@ -1329,6 +1331,26 @@ public:
         }
     }
 
+    void addLoopFactor()
+    {
+        if (loopIndexQueue.empty())
+            return;
+
+        for (int i = 0; i < (int)loopIndexQueue.size(); ++i)
+        {
+            int indexFrom = loopIndexQueue[i].first;
+            int indexTo = loopIndexQueue[i].second;
+            gtsam::Pose3 poseBetween = loopPoseQueue[i];
+            gtsam::noiseModel::Diagonal::shared_ptr noiseBetween = loopNoiseQueue[i];
+            gtSAMgraph.add(BetweenFactor<Pose3>(indexFrom, indexTo, poseBetween, noiseBetween));
+        }
+
+        loopIndexQueue.clear();
+        loopPoseQueue.clear();
+        loopNoiseQueue.clear();
+        aLoopIsClosed = true;
+    }
+
     void saveKeyFramesAndFactor()
     {
         if (saveFrame() == false)
@@ -1340,6 +1362,9 @@ public:
         // gps factor
         addGPSFactor();
 
+        // loop factor
+        addLoopFactor();
+
         // cout << "****************************************************" << endl;
         // gtSAMgraph.print("GTSAM Graph:\n");
 
@@ -1347,14 +1372,14 @@ public:
         isam->update(gtSAMgraph, initialEstimate);
         isam->update();
 
-        if (aLoopIsClosed == true)
-        {
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
-        }
+        // if (aLoopIsClosed == true)
+        // {
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        //     isam->update();
+        // }
 
         gtSAMgraph.resize(0);
         initialEstimate.clear();
