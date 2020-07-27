@@ -70,6 +70,7 @@ public:
     ros::Publisher pubRecentKeyFrames;
     ros::Publisher pubRecentKeyFrame;
     ros::Publisher pubCloudRegisteredRaw;
+    ros::Publisher pubLoopConstraintEdge;
 
     ros::Subscriber subLaserCloudInfo;
     ros::Subscriber subGPS;
@@ -126,8 +127,6 @@ public:
 
     std::mutex mtx;
 
-    double timeLastProcessing = -1;
-
     bool isDegenerate = false;
     Eigen::Matrix<float, 6, 6> matP;
 
@@ -138,6 +137,7 @@ public:
 
     bool aLoopIsClosed = false;
     int imuPreintegrationResetId = 0;
+    map<int, int> loopIndexContainer; // from new to old
 
     nav_msgs::Path globalPath;
 
@@ -163,6 +163,7 @@ public:
 
         pubHistoryKeyFrames = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_history_cloud", 1);
         pubIcpKeyFrames = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_corrected_cloud", 1);
+        pubLoopConstraintEdge = nh.advertise<visualization_msgs::MarkerArray>("/lio_sam/mapping/loop_closure_constraints", 1);
 
         pubRecentKeyFrames = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/map_local", 1);
         pubRecentKeyFrame = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/cloud_registered", 1);
@@ -235,8 +236,9 @@ public:
 
         std::lock_guard<std::mutex> lock(mtx);
 
-        if (timeLaserCloudInfoLast - timeLastProcessing >= mappingProcessInterval) {
-
+        static double timeLastProcessing = -1;
+        if (timeLaserCloudInfoLast - timeLastProcessing >= mappingProcessInterval)
+        {
             timeLastProcessing = timeLaserCloudInfoLast;
 
             updateInitialGuess();
@@ -495,6 +497,11 @@ public:
         *latestKeyFrameCloud += *transformPointCloud(cornerCloudKeyFrames[latestFrameIDLoopCloure], &copy_cloudKeyPoses6D->points[latestFrameIDLoopCloure]);
         *latestKeyFrameCloud += *transformPointCloud(surfCloudKeyFrames[latestFrameIDLoopCloure],   &copy_cloudKeyPoses6D->points[latestFrameIDLoopCloure]);
 
+        // check loop constraint added before
+        auto it = loopIndexContainer.find(latestFrameIDLoopCloure);
+        if (it != loopIndexContainer.end())
+            return false;
+
         // save history near key frames
         bool nearFrameAvailable = false;
         for (int j = -historyKeyframeSearchNum; j <= historyKeyframeSearchNum; ++j)
@@ -584,6 +591,57 @@ public:
         gtSAMgraph.add(BetweenFactor<Pose3>(latestFrameIDLoopCloure, closestHistoryFrameID, poseFrom.between(poseTo), constraintNoise));
 
         aLoopIsClosed = true;
+
+        // visualize loop constriant
+        loopIndexContainer[latestFrameIDLoopCloure] = closestHistoryFrameID;
+        {
+            visualization_msgs::MarkerArray markerArray;
+            // loop nodes
+            visualization_msgs::Marker markerNode;
+            markerNode.header.frame_id = "odom";
+            markerNode.header.stamp = timeLaserInfoStamp;
+            markerNode.action = visualization_msgs::Marker::ADD;
+            markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
+            markerNode.ns = "loop_nodes";
+            markerNode.id = 0;
+            markerNode.pose.orientation.w = 1;
+            markerNode.scale.x = 0.3; markerNode.scale.y = 0.3; markerNode.scale.z = 0.3; 
+            markerNode.color.r = 0; markerNode.color.g = 0.8; markerNode.color.b = 1;
+            markerNode.color.a = 1;
+            // loop edges
+            visualization_msgs::Marker markerEdge;
+            markerEdge.header.frame_id = "odom";
+            markerEdge.header.stamp = timeLaserInfoStamp;
+            markerEdge.action = visualization_msgs::Marker::ADD;
+            markerEdge.type = visualization_msgs::Marker::LINE_LIST;
+            markerEdge.ns = "loop_edges";
+            markerEdge.id = 1;
+            markerEdge.pose.orientation.w = 1;
+            markerEdge.scale.x = 0.1; markerEdge.scale.y = 0.1; markerEdge.scale.z = 0.1;
+            markerEdge.color.r = 0.9; markerEdge.color.g = 0.9; markerEdge.color.b = 0;
+            markerEdge.color.a = 1;
+
+            for (auto it = loopIndexContainer.begin(); it != loopIndexContainer.end(); ++it)
+            {
+                int key_cur = it->first;
+                int key_pre = it->second;
+                geometry_msgs::Point p;
+                p.x = copy_cloudKeyPoses6D->points[key_cur].x;
+                p.y = copy_cloudKeyPoses6D->points[key_cur].y;
+                p.z = copy_cloudKeyPoses6D->points[key_cur].z;
+                markerNode.points.push_back(p);
+                markerEdge.points.push_back(p);
+                p.x = copy_cloudKeyPoses6D->points[key_pre].x;
+                p.y = copy_cloudKeyPoses6D->points[key_pre].y;
+                p.z = copy_cloudKeyPoses6D->points[key_pre].z;
+                markerNode.points.push_back(p);
+                markerEdge.points.push_back(p);
+            }
+
+            markerArray.markers.push_back(markerNode);
+            markerArray.markers.push_back(markerEdge);
+            pubLoopConstraintEdge.publish(markerArray);
+        }
     }
 
 
@@ -617,16 +675,16 @@ public:
         }
 
         // use imu pre-integration estimation for pose guess
-        static bool lastImuTransAvailable = false;
+        static bool lastImuPreTransAvailable = false;
         static Eigen::Affine3f lastImuPreTransformation;
         if (cloudInfo.odomAvailable == true && cloudInfo.imuPreintegrationResetId == imuPreintegrationResetId)
         {
             Eigen::Affine3f transBack = pcl::getTransformation(cloudInfo.initialGuessX,    cloudInfo.initialGuessY,     cloudInfo.initialGuessZ, 
                                                                cloudInfo.initialGuessRoll, cloudInfo.initialGuessPitch, cloudInfo.initialGuessYaw);
-            if (lastImuTransAvailable == false)
+            if (lastImuPreTransAvailable == false)
             {
                 lastImuPreTransformation = transBack;
-                lastImuTransAvailable = true;
+                lastImuPreTransAvailable = true;
             } else {
                 Eigen::Affine3f transIncre = lastImuPreTransformation.inverse() * transBack;
                 Eigen::Affine3f transTobe = trans2Affine3f(transformTobeMapped);
@@ -1107,7 +1165,6 @@ public:
             }
 
             transformUpdate();
-            incrementalOdometryAffineBack = trans2Affine3f(transformTobeMapped);
         } else {
             ROS_WARN("Not enough features! Only %d edge and %d planar features available.", laserCloudCornerLastDSNum, laserCloudSurfLastDSNum);
         }
@@ -1141,6 +1198,8 @@ public:
         transformTobeMapped[0] = constraintTransformation(transformTobeMapped[0], rotation_tollerance);
         transformTobeMapped[1] = constraintTransformation(transformTobeMapped[1], rotation_tollerance);
         transformTobeMapped[5] = constraintTransformation(transformTobeMapped[5], z_tollerance);
+
+        incrementalOdometryAffineBack = trans2Affine3f(transformTobeMapped);
     }
 
     float constraintTransformation(float value, float limit)
