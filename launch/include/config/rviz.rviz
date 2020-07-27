@@ -78,13 +78,13 @@ Visualization Manager:
               Scale: 1
               Value: true
             Value: false
-          Enabled: false
+          Enabled: true
           Keep: 300
-          Name: Odo IMU
+          Name: Odom IMU
           Position Tolerance: 0.100000001
           Shape:
             Alpha: 1
-            Axes Length: 0.25
+            Axes Length: 0.5
             Axes Radius: 0.100000001
             Color: 255; 25; 0
             Head Length: 0.300000012
@@ -94,7 +94,7 @@ Visualization Manager:
             Value: Axes
           Topic: /odometry/imu
           Unreliable: false
-          Value: false
+          Value: true
         - Angle Tolerance: 0.100000001
           Class: rviz/Odometry
           Covariance:
@@ -182,7 +182,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 100
+          Max Intensity: 245
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Velodyne
@@ -310,9 +310,9 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 100
+          Max Intensity: 130
           Min Color: 0; 0; 0
-          Min Intensity: 1
+          Min Intensity: 0
           Name: Map (cloud)
           Position Transformer: XYZ
           Queue Size: 10
@@ -395,7 +395,7 @@ Visualization Manager:
           Length: 0.300000012
           Line Style: Billboards
           Line Width: 0.100000001
-          Name: Path (global)
+          Name: Path
           Offset:
             X: 0
             Y: 0
@@ -406,29 +406,6 @@ Visualization Manager:
           Shaft Diameter: 0.100000001
           Shaft Length: 0.100000001
           Topic: /lio_sam/mapping/path
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz/Path
-          Color: 255; 0; 127
-          Enabled: true
-          Head Diameter: 0.300000012
-          Head Length: 0.200000003
-          Length: 0.300000012
-          Line Style: Billboards
-          Line Width: 0.100000001
-          Name: Path (local)
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: None
-          Radius: 0.0299999993
-          Shaft Diameter: 0.100000001
-          Shaft Length: 0.100000001
-          Topic: /lio_sam/imu/path
           Unreliable: false
           Value: true
         - Alpha: 1
@@ -487,7 +464,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 65.799942
+      Distance: 44.0755539
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -502,10 +479,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.00039816
+      Pitch: 1.04039812
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 0.443523765
+      Yaw: 4.05668163
     Saved: ~
 Window Geometry:
   Displays:

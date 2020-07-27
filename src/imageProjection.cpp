@@ -377,7 +377,6 @@ public:
         cloudInfo.initialGuessRoll  = roll;
         cloudInfo.initialGuessPitch = pitch;
         cloudInfo.initialGuessYaw   = yaw;
-        cloudInfo.imuPreintegrationResetId = round(startOdomMsg.pose.covariance[0]); // not used if it's incremental
 
         cloudInfo.odomAvailable = true;
 
