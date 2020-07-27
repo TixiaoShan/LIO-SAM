@@ -179,10 +179,10 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: Intensity
           Decay Time: 0
-          Enabled: false
+          Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 135
+          Max Intensity: 116
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Velodyne
@@ -196,7 +196,7 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: false
+          Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
@@ -310,7 +310,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 108
+          Max Intensity: 100
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: Map (cloud)
@@ -479,10 +479,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.06539822
+      Pitch: 0.910398364
       Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 3.79167652
+      Yaw: 3.43167281
     Saved: ~
 Window Geometry:
   Displays:
