@@ -603,7 +603,7 @@ public:
         visualization_msgs::MarkerArray markerArray;
         // loop nodes
         visualization_msgs::Marker markerNode;
-        markerNode.header.frame_id = "odom";
+        markerNode.header.frame_id = odometryFrame;
         markerNode.header.stamp = timeLaserInfoStamp;
         markerNode.action = visualization_msgs::Marker::ADD;
         markerNode.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -615,7 +615,7 @@ public:
         markerNode.color.a = 1;
         // loop edges
         visualization_msgs::Marker markerEdge;
-        markerEdge.header.frame_id = "odom";
+        markerEdge.header.frame_id = odometryFrame;
         markerEdge.header.stamp = timeLaserInfoStamp;
         markerEdge.action = visualization_msgs::Marker::ADD;
         markerEdge.type = visualization_msgs::Marker::LINE_LIST;
