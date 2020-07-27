@@ -184,8 +184,9 @@ Thank you for citing [LIO-SAM (IROS-2020)](./config/doc/paper.pdf) if you use an
 @inproceedings{liosam2020shan,
   title={LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping},
   author={Shan, Tixiao and Englot, Brendan and Meyers, Drew and Wang, Wei and Ratti, Carlo and Rus Daniela},
-  journal={arXiv preprint arXiv:2007.00258}
-  year={2020}
+  journal={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)}
+  year={2020},
+  organization={IEEE}
 }
 ```
 
