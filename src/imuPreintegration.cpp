@@ -34,11 +34,27 @@ public:
     Eigen::Affine3f imuOdomAffineFront;
     Eigen::Affine3f imuOdomAffineBack;
 
+    tf::TransformListener tfListener;
+    tf::StampedTransform lidar2Baselink;
+
     double lidarOdomTime = -1;
     deque<nav_msgs::Odometry> imuOdomQueue;
 
     TransformFusion()
     {
+        if(lidarFrame != baselinkFrame)
+        {
+            try
+            {
+                tfListener.waitForTransform(lidarFrame, baselinkFrame, ros::Time(0), ros::Duration(3.0));
+                tfListener.lookupTransform(lidarFrame, baselinkFrame, ros::Time(0), lidar2Baselink);
+            }
+            catch (tf::TransformException ex)
+            {
+                ROS_ERROR("%s",ex.what());
+            }
+        }
+
         subLaserOdometry = nh.subscribe<nav_msgs::Odometry>("lio_sam/mapping/odometry", 5, &TransformFusion::lidarOdometryHandler, this, ros::TransportHints().tcpNoDelay());
         subImuOdometry   = nh.subscribe<nav_msgs::Odometry>(odomTopic+"_incremental",   2000, &TransformFusion::imuOdometryHandler,   this, ros::TransportHints().tcpNoDelay());
 
@@ -106,7 +122,9 @@ public:
         static tf::TransformBroadcaster tfOdom2BaseLink;
         tf::Transform tCur;
         tf::poseMsgToTF(laserOdometry.pose.pose, tCur);
-        tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, odomMsg->header.stamp, odometryFrame, lidarFrame);
+        if(lidarFrame != baselinkFrame)
+            tCur = tCur * lidar2Baselink;
+        tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, odomMsg->header.stamp, odometryFrame, baselinkFrame);
         tfOdom2BaseLink.sendTransform(odom_2_baselink);
     }
 };

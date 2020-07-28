@@ -72,6 +72,7 @@ public:
 
     //Frames
     string lidarFrame;
+    string baselinkFrame;
     string odometryFrame;
     string mapFrame;
 
@@ -152,6 +153,7 @@ public:
         nh.param<std::string>("lio_sam/gpsTopic", gpsTopic, "odometry/gps");
 
         nh.param<std::string>("lio_sam/lidarFrame", lidarFrame, "base_link");
+        nh.param<std::string>("lio_sam/baselinkFrame", baselinkFrame, "base_link");
         nh.param<std::string>("lio_sam/odometryFrame", odometryFrame, "odom");
         nh.param<std::string>("lio_sam/mapFrame", mapFrame, "map");
 
