@@ -776,33 +776,6 @@ public:
 
     void extractCloud(pcl::PointCloud<PointType>::Ptr cloudToExtract)
     {
-        // std::vector<pcl::PointCloud<PointType>> laserCloudCornerSurroundingVec;
-        // std::vector<pcl::PointCloud<PointType>> laserCloudSurfSurroundingVec;
-
-        // laserCloudCornerSurroundingVec.resize(cloudToExtract->size());
-        // laserCloudSurfSurroundingVec.resize(cloudToExtract->size());
-
-        // // extract surrounding map
-        // #pragma omp parallel for num_threads(numberOfCores)
-        // for (int i = 0; i < (int)cloudToExtract->size(); ++i)
-        // {
-        //     if (pointDistance(cloudToExtract->points[i], cloudKeyPoses3D->back()) > surroundingKeyframeSearchRadius)
-        //         continue;
-        //     int thisKeyInd = (int)cloudToExtract->points[i].intensity;
-        //     laserCloudCornerSurroundingVec[i]  = *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],  &cloudKeyPoses6D->points[thisKeyInd]);
-        //     laserCloudSurfSurroundingVec[i]    = *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
-        // }
-
-        // // fuse the map
-        // laserCloudCornerFromMap->clear();
-        // laserCloudSurfFromMap->clear(); 
-        // for (int i = 0; i < (int)cloudToExtract->size(); ++i)
-        // {
-        //     *laserCloudCornerFromMap += laserCloudCornerSurroundingVec[i];
-        //     *laserCloudSurfFromMap   += laserCloudSurfSurroundingVec[i];
-        // }
-
-
         // fuse the map
         laserCloudCornerFromMap->clear();
         laserCloudSurfFromMap->clear(); 
