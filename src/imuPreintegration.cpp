@@ -128,6 +128,28 @@ public:
             tCur = tCur * lidar2Baselink;
         tf::StampedTransform odom_2_baselink = tf::StampedTransform(tCur, odomMsg->header.stamp, odometryFrame, baselinkFrame);
         tfOdom2BaseLink.sendTransform(odom_2_baselink);
+
+        // publish IMU path
+        static nav_msgs::Path imuPath;
+        static double last_path_time = -1;
+        double imuTime = imuOdomQueue.back().header.stamp.toSec();
+        if (imuTime - last_path_time > 0.1)
+        {
+            last_path_time = imuTime;
+            geometry_msgs::PoseStamped pose_stamped;
+            pose_stamped.header.stamp = imuOdomQueue.back().header.stamp;
+            pose_stamped.header.frame_id = odometryFrame;
+            pose_stamped.pose = laserOdometry.pose.pose;
+            imuPath.poses.push_back(pose_stamped);
+            while(!imuPath.poses.empty() && imuPath.poses.front().header.stamp.toSec() < lidarOdomTime - 0.1)
+                imuPath.poses.erase(imuPath.poses.begin());
+            if (pubImuPath.getNumSubscribers() != 0)
+            {
+                imuPath.header.stamp = imuOdomQueue.back().header.stamp;
+                imuPath.header.frame_id = odometryFrame;
+                pubImuPath.publish(imuPath);
+            }
+        }
     }
 };
 
