@@ -29,6 +29,7 @@ public:
     ros::Subscriber subLaserOdometry;
 
     ros::Publisher pubImuOdometry;
+    ros::Publisher pubImuPath;
 
     Eigen::Affine3f lidarOdomAffine;
     Eigen::Affine3f imuOdomAffineFront;
@@ -59,6 +60,7 @@ public:
         subImuOdometry   = nh.subscribe<nav_msgs::Odometry>(odomTopic+"_incremental",   2000, &TransformFusion::imuOdometryHandler,   this, ros::TransportHints().tcpNoDelay());
 
         pubImuOdometry   = nh.advertise<nav_msgs::Odometry>(odomTopic, 2000);
+        pubImuPath       = nh.advertise<nav_msgs::Path>    ("lio_sam/imu/path", 1);
     }
 
     Eigen::Affine3f odom2affine(nav_msgs::Odometry odom)
@@ -93,7 +95,7 @@ public:
 
         imuOdomQueue.push_back(*odomMsg);
 
-        // front imu odometry
+        // get latest odometry (at current IMU stamp)
         if (lidarOdomTime == -1)
             return;
         while (!imuOdomQueue.empty())
@@ -138,13 +140,6 @@ public:
     ros::Subscriber subImu;
     ros::Subscriber subOdometry;
     ros::Publisher pubImuOdometry;
-    ros::Publisher pubImuPath;
-
-    // map -> odom
-    tf::Transform map_to_odom;
-    tf::TransformBroadcaster tfMap2Odom;
-    // odom -> base_link
-    tf::TransformBroadcaster tfOdom2BaseLink;
 
     bool systemInitialized = false;
 
@@ -190,9 +185,6 @@ public:
         subOdometry = nh.subscribe<nav_msgs::Odometry>("lio_sam/mapping/odometry_incremental", 5,    &IMUPreintegration::odometryHandler, this, ros::TransportHints().tcpNoDelay());
 
         pubImuOdometry = nh.advertise<nav_msgs::Odometry> (odomTopic+"_incremental", 2000);
-        pubImuPath     = nh.advertise<nav_msgs::Path>     ("lio_sam/imu/path", 1);
-
-        map_to_odom    = tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Vector3(0, 0, 0));
 
         boost::shared_ptr<gtsam::PreintegrationParams> p = gtsam::PreintegrationParams::MakeSharedU(imuGravity);
         p->accelerometerCovariance  = gtsam::Matrix33::Identity(3,3) * pow(imuAccNoise, 2); // acc white noise in continuous
