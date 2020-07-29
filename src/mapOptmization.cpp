@@ -101,6 +101,7 @@ public:
     std::vector<PointType> coeffSelSurfVec;
     std::vector<bool> laserCloudOriSurfFlag;
 
+    map<int, pair<pcl::PointCloud<PointType>, pcl::PointCloud<PointType>>> laserCloudMapContainer;
     pcl::PointCloud<PointType>::Ptr laserCloudCornerFromMap;
     pcl::PointCloud<PointType>::Ptr laserCloudSurfFromMap;
     pcl::PointCloud<PointType>::Ptr laserCloudCornerFromMapDS;
@@ -285,8 +286,9 @@ public:
 
         Eigen::Affine3f transCur = pcl::getTransformation(transformIn->x, transformIn->y, transformIn->z, transformIn->roll, transformIn->pitch, transformIn->yaw);
         
-        for (int i = 0; i < cloudSize; ++i){
-
+        #pragma omp parallel for num_threads(numberOfCores)
+        for (int i = 0; i < cloudSize; ++i)
+        {
             pointFrom = &cloudIn->points[i];
             cloudOut->points[i].x = transCur(0,0) * pointFrom->x + transCur(0,1) * pointFrom->y + transCur(0,2) * pointFrom->z + transCur(0,3);
             cloudOut->points[i].y = transCur(1,0) * pointFrom->x + transCur(1,1) * pointFrom->y + transCur(1,2) * pointFrom->z + transCur(1,3);
@@ -560,9 +562,15 @@ public:
         pcl::PointCloud<PointType>::Ptr unused_result(new pcl::PointCloud<PointType>());
         icp.align(*unused_result);
 
-        // std::cout << "ICP converg flag:" << icp.hasConverged() << ". Fitness score: " << icp.getFitnessScore() << std::endl;    
         if (icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore)
             return;
+
+        // regulate constraint add frequency
+        static double lastLoopConstraintTime = -1;
+        if (timeLaserInfoCur - lastLoopConstraintTime < loopClosureInterval)
+            return;
+        else
+            lastLoopConstraintTime = timeLaserInfoCur;
 
         // publish corrected cloud
         if (pubIcpKeyFrames.getNumSubscribers() != 0){
@@ -768,30 +776,56 @@ public:
 
     void extractCloud(pcl::PointCloud<PointType>::Ptr cloudToExtract)
     {
-        std::vector<pcl::PointCloud<PointType>> laserCloudCornerSurroundingVec;
-        std::vector<pcl::PointCloud<PointType>> laserCloudSurfSurroundingVec;
+        // std::vector<pcl::PointCloud<PointType>> laserCloudCornerSurroundingVec;
+        // std::vector<pcl::PointCloud<PointType>> laserCloudSurfSurroundingVec;
 
-        laserCloudCornerSurroundingVec.resize(cloudToExtract->size());
-        laserCloudSurfSurroundingVec.resize(cloudToExtract->size());
+        // laserCloudCornerSurroundingVec.resize(cloudToExtract->size());
+        // laserCloudSurfSurroundingVec.resize(cloudToExtract->size());
 
-        // extract surrounding map
-        #pragma omp parallel for num_threads(numberOfCores)
-        for (int i = 0; i < (int)cloudToExtract->size(); ++i)
-        {
-            if (pointDistance(cloudToExtract->points[i], cloudKeyPoses3D->back()) > surroundingKeyframeSearchRadius)
-                continue;
-            int thisKeyInd = (int)cloudToExtract->points[i].intensity;
-            laserCloudCornerSurroundingVec[i]  = *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],  &cloudKeyPoses6D->points[thisKeyInd]);
-            laserCloudSurfSurroundingVec[i]    = *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
-        }
+        // // extract surrounding map
+        // #pragma omp parallel for num_threads(numberOfCores)
+        // for (int i = 0; i < (int)cloudToExtract->size(); ++i)
+        // {
+        //     if (pointDistance(cloudToExtract->points[i], cloudKeyPoses3D->back()) > surroundingKeyframeSearchRadius)
+        //         continue;
+        //     int thisKeyInd = (int)cloudToExtract->points[i].intensity;
+        //     laserCloudCornerSurroundingVec[i]  = *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],  &cloudKeyPoses6D->points[thisKeyInd]);
+        //     laserCloudSurfSurroundingVec[i]    = *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
+        // }
+
+        // // fuse the map
+        // laserCloudCornerFromMap->clear();
+        // laserCloudSurfFromMap->clear(); 
+        // for (int i = 0; i < (int)cloudToExtract->size(); ++i)
+        // {
+        //     *laserCloudCornerFromMap += laserCloudCornerSurroundingVec[i];
+        //     *laserCloudSurfFromMap   += laserCloudSurfSurroundingVec[i];
+        // }
+
 
         // fuse the map
         laserCloudCornerFromMap->clear();
         laserCloudSurfFromMap->clear(); 
         for (int i = 0; i < (int)cloudToExtract->size(); ++i)
         {
-            *laserCloudCornerFromMap += laserCloudCornerSurroundingVec[i];
-            *laserCloudSurfFromMap   += laserCloudSurfSurroundingVec[i];
+            if (pointDistance(cloudToExtract->points[i], cloudKeyPoses3D->back()) > surroundingKeyframeSearchRadius)
+                continue;
+
+            int thisKeyInd = (int)cloudToExtract->points[i].intensity;
+            if (laserCloudMapContainer.find(thisKeyInd) != laserCloudMapContainer.end()) 
+            {
+                // transformed cloud available
+                *laserCloudCornerFromMap += laserCloudMapContainer[thisKeyInd].first;
+                *laserCloudSurfFromMap   += laserCloudMapContainer[thisKeyInd].second;
+            } else {
+                // transformed cloud not available
+                pcl::PointCloud<PointType> laserCloudCornerTemp = *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],  &cloudKeyPoses6D->points[thisKeyInd]);
+                pcl::PointCloud<PointType> laserCloudSurfTemp = *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
+                *laserCloudCornerFromMap += laserCloudCornerTemp;
+                *laserCloudSurfFromMap   += laserCloudSurfTemp;
+                laserCloudMapContainer[thisKeyInd] = make_pair(laserCloudCornerTemp, laserCloudSurfTemp);
+            }
+            
         }
 
         // Downsample the surrounding corner key frames (or map)
@@ -802,6 +836,10 @@ public:
         downSizeFilterSurf.setInputCloud(laserCloudSurfFromMap);
         downSizeFilterSurf.filter(*laserCloudSurfFromMapDS);
         laserCloudSurfFromMapDSNum = laserCloudSurfFromMapDS->size();
+
+        // clear map cache if too large
+        if (laserCloudMapContainer.size() > 1000)
+            laserCloudMapContainer.clear();
     }
 
     void extractSurroundingKeyFrames()
@@ -809,12 +847,14 @@ public:
         if (cloudKeyPoses3D->points.empty() == true)
             return; 
         
-        if (loopClosureEnableFlag == true)
-        {
-            extractForLoopClosure();    
-        } else {
-            extractNearby();
-        }
+        // if (loopClosureEnableFlag == true)
+        // {
+        //     extractForLoopClosure();    
+        // } else {
+        //     extractNearby();
+        // }
+
+        extractNearby();
     }
 
     void downsampleCurrentScan()
@@ -1446,6 +1486,8 @@ public:
 
         if (aLoopIsClosed == true)
         {
+            // clear map cache
+            laserCloudMapContainer.clear();
             // clear path
             globalPath.poses.clear();
             // update key poses
