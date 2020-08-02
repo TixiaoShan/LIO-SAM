@@ -77,7 +77,7 @@ lio_sam:
 
   # Loop closure
   loopClosureEnableFlag: true
-  loopClosureInterval: 5.0                      # seconds, regulate loop closure constraint add frequency
+  loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
   historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be considered for loop closure
