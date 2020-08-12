@@ -103,22 +103,22 @@ The user needs to prepare the point cloud data in the correct format for cloud d
 ## Sample datasets
 
   * Download some sample datasets to test the functionality of the package. The datasets below is configured to run using the default settings:
-    - [**Walking dataset**](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)
-    - [**Garden dataset**](https://drive.google.com/file/d/1q6yuVhyJbkUBhut9yhfox2WdV4VZ9BZX/view?usp=sharing)
-    - [**Park dataset**](https://drive.google.com/file/d/19PZieaJaVkXDs2ZromaHTxYoq0zkiHae/view?usp=sharing)
+    - **Walking dataset:** [[Google Drive](https://drive.google.com/file/d/1HN5fYPXEHbDq0E5JtbQPkCHIHUoTFFnN/view?usp=sharing)][[Dropbox](https://www.dropbox.com/s/jzql78speb1jbcc/casual_walk.bag.zip?dl=0)]
+    - **Park dataset:** [[Google Drive](https://drive.google.com/file/d/19PZieaJaVkXDs2ZromaHTxYoq0zkiHae/view?usp=sharing)][[Dropbox](https://www.dropbox.com/s/fnuxpdc4f9yyb55/park.bag.zip?dl=0)]
+    - **Garden dataset:** [[Google Drive](https://drive.google.com/file/d/1q6yuVhyJbkUBhut9yhfox2WdV4VZ9BZX/view?usp=sharing)]
 
   * The datasets below need the parameters to be configured. In these datasets, the point cloud topic is "points_raw." The IMU topic is "imu_correct," which gives the IMU data in ROS REP105 standard. Because no IMU transformation is needed for this dataset, the following configurations need to be changed to run this dataset successfully:
     - The "imuTopic" parameter in "config/params.yaml" needs to be set to "imu_correct".
     - The "extrinsicRot" and "extrinsicRPY" in "config/params.yaml" needs to be set as identity matrices.
-      - [**Rotation dataset**](https://drive.google.com/file/d/1V4ijY4PgLdjKmdzcQ18Xu7VdcHo2UaWI/view?usp=sharing)
-      - [**Campus dataset (large)**](https://drive.google.com/file/d/1q4Sf7s2veVc7bs08Qeha3stOiwsytopL/view?usp=sharing)
-      - [**Campus dataset (small)**](https://drive.google.com/file/d/1_V-cFMTQ4RO-_16mU9YPUE8ozsPeddCv/view?usp=sharing)
-
+      - **Rotation dataset:** [[Google Drive](https://drive.google.com/file/d/1V4ijY4PgLdjKmdzcQ18Xu7VdcHo2UaWI/view?usp=sharing)][[Dropbox](https://www.dropbox.com/s/xdwzjnqwr7x19cl/rotation.bag.zip?dl=0)]
+      - **Campus dataset (large):** [[Google Drive](https://drive.google.com/file/d/1q4Sf7s2veVc7bs08Qeha3stOiwsytopL/view?usp=sharing)][[Dropbox](https://www.dropbox.com/s/etgnfg39ha79b7a/big_loop.bag.zip?dl=0)]
+      - **Campus dataset (small):** [[Google Drive](https://drive.google.com/file/d/1_V-cFMTQ4RO-_16mU9YPUE8ozsPeddCv/view?usp=sharing)][[Dropbox](https://www.dropbox.com/s/33u6epkfu36i1fd/west.bag.zip?dl=0)]
+      
   * Ouster (OS1-128) dataset. No extrinsics need to be changed for this dataset if you are using the default settings. Please follow the Ouster notes below to configure the package to run with Ouster data. A video of the dataset can be found on [YouTube](https://youtu.be/O7fKgZQzkEo):
-    - [**Rooftop dataset**](https://drive.google.com/file/d/1Qy2rZdPudFhDbATPpblioBb8fRtjDGQj/view?usp=sharing)
+    - **Rooftop dataset:** [[Google Drive](https://drive.google.com/file/d/1Qy2rZdPudFhDbATPpblioBb8fRtjDGQj/view?usp=sharing)]
 
   * KITTI dataset. The extrinsics can be found in the Notes KITTI section below. To generate more bags using other KITTI raw data, you can use the python script provided in "config/doc/kitti2bag".
-    - [**2011_09_30_drive_0028**](https://drive.google.com/file/d/12h3ooRAZVTjoMrf3uv1_KriEXm33kHc7/view?usp=sharing)
+    - **2011_09_30_drive_0028:** [[Google Drive](https://drive.google.com/file/d/12h3ooRAZVTjoMrf3uv1_KriEXm33kHc7/view?usp=sharing)]
 
 ## Run the package
 
