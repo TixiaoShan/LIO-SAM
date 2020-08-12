@@ -618,7 +618,7 @@ public:
         loopKeyCur = cloudSize - 1;
         for (int i = cloudSize - 1; i >= 0; --i)
         {
-            if (copy_cloudKeyPoses6D->points[i].time > loopTimeCur)
+            if (copy_cloudKeyPoses6D->points[i].time >= loopTimeCur)
                 loopKeyCur = round(copy_cloudKeyPoses6D->points[i].intensity);
             else
                 break;
@@ -628,7 +628,7 @@ public:
         loopKeyPre = 0;
         for (int i = 0; i < cloudSize; ++i)
         {
-            if (copy_cloudKeyPoses6D->points[i].time < loopTimePre)
+            if (copy_cloudKeyPoses6D->points[i].time <= loopTimePre)
                 loopKeyPre = round(copy_cloudKeyPoses6D->points[i].intensity);
             else
                 break;
