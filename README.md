@@ -169,6 +169,8 @@ rosbag play your-bag.bag -r 3
       - Change "N_SCAN" and "Horizon_SCAN" in "params.yaml" according to your lidar, i.e., N_SCAN=128, Horizon_SCAN=1024.
       - Comment the point definition for Velodyne on top of "imageProjection.cpp".
       - Uncomment the point definition for Ouster on top of "imageProjection.cpp".
+      - Comment line "timeScanEnd = timeScanCur + laserCloudIn->points.back().time" in "imageProjection.cpp".
+      - Uncomment line "timeScanEnd = timeScanCur + (float)laserCloudIn->points.back().t / 1000000000.0" in "imageProjection.cpp".
       - Comment line "deskewPoint(&thisPoint, laserCloudIn->points[i].time)" in "imageProjection.cpp".
       - Uncomment line "deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0" in "imageProjection.cpp".
       - Run "catkin_make" to re-compile the package.
