@@ -186,7 +186,7 @@ rosbag play your-bag.bag -r 3
 
   - **Zigzag path**: if your lidar and IMU data formats are consistent with the requirement of LIO-SAM, this problem is likely caused by un-synced timestamp of lidar and IMU data. I encounter this issue when I use Ouster lidar, which gives inconsistent lidar timestamp. 
 
-  - **mapOptimization crash**: it is likely caused by GTSAM. Please install the GTSAM specified in the README.md. More similar issues can be found in [here](https://github.com/TixiaoShan/LIO-SAM/issues).
+  - **mapOptimization crash**: it is caused by GTSAM. Please install the GTSAM specified in the README.md. More similar issues can be found [here](https://github.com/TixiaoShan/LIO-SAM/issues).
 
 ## Paper 
 
