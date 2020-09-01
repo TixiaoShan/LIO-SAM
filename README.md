@@ -176,6 +176,8 @@ rosbag play your-bag.bag -r 3
       - Comment line "deskewPoint(&thisPoint, laserCloudIn->points[i].time)" in "imageProjection.cpp".
       - Uncomment line "deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0" in "imageProjection.cpp".
       - Run "catkin_make" to re-compile the package.
+    - Gen 1 and Gen 2 Ouster:
+      It seems that the point coordinate definition might be different in different generations. Please refer to [Issue #94](https://github.com/TixiaoShan/LIO-SAM/issues/94) for debugging.
 
 <p align='center'>
     <img src="./config/doc/ouster-device.jpg" alt="drawing" width="300"/>
