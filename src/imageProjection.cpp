@@ -34,7 +34,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRT,
 //     (uint8_t, ring, ring) (uint16_t, noise, noise) (uint32_t, range, range)
 // )
 
-const int queueLength = 500;
+const int queueLength = 2000;
 
 class ImageProjection : public ParamServer
 {
@@ -81,7 +81,7 @@ private:
 
     lio_sam::cloud_info cloudInfo;
     double timeScanCur;
-    double timeScanNext;
+    double timeScanEnd;
     std_msgs::Header cloudHeader;
 
 
@@ -193,21 +193,19 @@ public:
     {
         // cache point cloud
         cloudQueue.push_back(*laserCloudMsg);
-
         if (cloudQueue.size() <= 2)
             return false;
-        else
-        {
-            currentCloudMsg = cloudQueue.front();
-            cloudQueue.pop_front();
-
-            cloudHeader = currentCloudMsg.header;
-            timeScanCur = cloudHeader.stamp.toSec();
-            timeScanNext = cloudQueue.front().header.stamp.toSec();
-        }
 
         // convert cloud
+        currentCloudMsg = cloudQueue.front();
+        cloudQueue.pop_front();
         pcl::fromROSMsg(currentCloudMsg, *laserCloudIn);
+
+        // get timestamp
+        cloudHeader = currentCloudMsg.header;
+        timeScanCur = cloudHeader.stamp.toSec();
+        timeScanEnd = timeScanCur + laserCloudIn->points.back().time; // Velodyne
+        // timeScanEnd = timeScanCur + (float)laserCloudIn->points.back().t / 1000000000.0; // Ouster
 
         // check dense flag
         if (laserCloudIn->is_dense == false)
@@ -261,7 +259,7 @@ public:
         std::lock_guard<std::mutex> lock2(odoLock);
 
         // make sure IMU data available for the scan
-        if (imuQueue.empty() || imuQueue.front().header.stamp.toSec() > timeScanCur || imuQueue.back().header.stamp.toSec() < timeScanNext)
+        if (imuQueue.empty() || imuQueue.front().header.stamp.toSec() > timeScanCur || imuQueue.back().header.stamp.toSec() < timeScanEnd)
         {
             ROS_DEBUG("Waiting for IMU data ...");
             return false;
@@ -300,7 +298,7 @@ public:
             if (currentImuTime <= timeScanCur)
                 imuRPY2rosRPY(&thisImuMsg, &cloudInfo.imuRollInit, &cloudInfo.imuPitchInit, &cloudInfo.imuYawInit);
 
-            if (currentImuTime > timeScanNext + 0.01)
+            if (currentImuTime > timeScanEnd + 0.01)
                 break;
 
             if (imuPointerCur == 0){
@@ -383,7 +381,7 @@ public:
         // get end odometry at the end of the scan
         odomDeskewFlag = false;
 
-        if (odomQueue.back().header.stamp.toSec() < timeScanNext)
+        if (odomQueue.back().header.stamp.toSec() < timeScanEnd)
             return;
 
         nav_msgs::Odometry endOdomMsg;
@@ -392,7 +390,7 @@ public:
         {
             endOdomMsg = odomQueue[i];
 
-            if (ROS_TIME(&endOdomMsg) < timeScanNext)
+            if (ROS_TIME(&endOdomMsg) < timeScanEnd)
                 continue;
             else
                 break;
@@ -451,7 +449,7 @@ public:
         // if (cloudInfo.odomAvailable == false || odomDeskewFlag == false)
         //     return;
 
-        // float ratio = relTime / (timeScanNext - timeScanCur);
+        // float ratio = relTime / (timeScanEnd - timeScanCur);
 
         // *posXCur = ratio * odomIncreX;
         // *posYCur = ratio * odomIncreY;
@@ -502,6 +500,10 @@ public:
             thisPoint.z = laserCloudIn->points[i].z;
             thisPoint.intensity = laserCloudIn->points[i].intensity;
 
+            float range = pointDistance(thisPoint);
+            if (range < lidarMinRange || range > lidarMaxRange)
+                continue;
+
             int rowIdn = laserCloudIn->points[i].ring;
             if (rowIdn < 0 || rowIdn >= N_SCAN)
                 continue;
@@ -519,26 +521,15 @@ public:
             if (columnIdn < 0 || columnIdn >= Horizon_SCAN)
                 continue;
 
-            float range = pointDistance(thisPoint);
-            
-            if (range < 1.0)
-                continue;
-
             if (rangeMat.at<float>(rowIdn, columnIdn) != FLT_MAX)
                 continue;
-
-            // for the amsterdam dataset
-            // if (range < 6.0 && rowIdn <= 7 && (columnIdn >= 1600 || columnIdn <= 200))
-            //     continue;
-            // if (thisPoint.z < -2.0)
-            //     continue;
 
             thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].time); // Velodyne
             // thisPoint = deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0); // Ouster
 
-            rangeMat.at<float>(rowIdn, columnIdn) = pointDistance(thisPoint);
+            rangeMat.at<float>(rowIdn, columnIdn) = range;
 
-            int index = columnIdn  + rowIdn * Horizon_SCAN;
+            int index = columnIdn + rowIdn * Horizon_SCAN;
             fullCloud->points[index] = thisPoint;
         }
     }
