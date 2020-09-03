@@ -186,9 +186,11 @@ rosbag play your-bag.bag -r 3
 
 ## Issues
 
-  - **Zigzag path**: if your lidar and IMU data formats are consistent with the requirement of LIO-SAM, this problem is likely caused by un-synced timestamp of lidar and IMU data. I encounter this issue when I use Ouster lidar, which gives inconsistent lidar timestamp. 
+  - **Zigzag or jerking behavior**: if your lidar and IMU data formats are consistent with the requirement of LIO-SAM, this problem is likely caused by un-synced timestamp of lidar and IMU data. I encounter this issue when I use Ouster lidar, which gives inconsistent lidar timestamp.
 
-  - **mapOptimization crash**: it is caused by GTSAM. Please install the GTSAM specified in the README.md. More similar issues can be found [here](https://github.com/TixiaoShan/LIO-SAM/issues).
+  - **Jumpping up and down**: if you start testing your bag file and the base_link starts to jump up and down immediately, it is likely your IMU extrinsics are wrong. For example, the gravity acceleration has negative value.
+
+  - **mapOptimization crash**: it is usually caused by GTSAM. Please install the GTSAM specified in the README.md. More similar issues can be found [here](https://github.com/TixiaoShan/LIO-SAM/issues).
 
 ## Paper 
 
