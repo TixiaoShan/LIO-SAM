@@ -219,7 +219,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## TODO
 
-  - [ ] To be added
+  - [ ] [Bug within imuPreintegration](https://github.com/TixiaoShan/LIO-SAM/issues/104)
 
 ## Acknowledgement
 
