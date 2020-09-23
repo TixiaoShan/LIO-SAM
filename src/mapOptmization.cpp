@@ -1194,7 +1194,8 @@ public:
             matP = matV.inv() * matV2;
         }
 
-        if (isDegenerate) {
+        if (isDegenerate)
+        {
             cv::Mat matX2(6, 1, CV_32F, cv::Scalar::all(0));
             matX.copyTo(matX2);
             matX = matP * matX2;
@@ -1604,14 +1605,21 @@ public:
             {
                 if (std::abs(cloudInfo.imuPitchInit) < 1.4)
                 {
-                    double imuWeight = imuRPYWeight;
+                    double imuWeight = 0.1;
                     tf::Quaternion imuQuaternion;
                     tf::Quaternion transformQuaternion;
                     double rollMid, pitchMid, yawMid;
-                    transformQuaternion.setRPY(roll, pitch, 0);
-                    imuQuaternion.setRPY(cloudInfo.imuRollInit, cloudInfo.imuPitchInit, 0);
+
+                    // slerp roll
+                    transformQuaternion.setRPY(roll, 0, 0);
+                    imuQuaternion.setRPY(cloudInfo.imuRollInit, 0, 0);
                     tf::Matrix3x3(transformQuaternion.slerp(imuQuaternion, imuWeight)).getRPY(rollMid, pitchMid, yawMid);
                     roll = rollMid;
+
+                    // slerp pitch
+                    transformQuaternion.setRPY(0, pitch, 0);
+                    imuQuaternion.setRPY(0, cloudInfo.imuPitchInit, 0);
+                    tf::Matrix3x3(transformQuaternion.slerp(imuQuaternion, imuWeight)).getRPY(rollMid, pitchMid, yawMid);
                     pitch = pitchMid;
                 }
             }
@@ -1622,6 +1630,10 @@ public:
             laserOdomIncremental.pose.pose.position.y = y;
             laserOdomIncremental.pose.pose.position.z = z;
             laserOdomIncremental.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
+            if (isDegenerate)
+                laserOdomIncremental.pose.covariance[0] = 1;
+            else
+                laserOdomIncremental.pose.covariance[0] = 0;
         }
         pubLaserOdometryIncremental.publish(laserOdomIncremental);
     }
