@@ -1,8 +1,7 @@
 #include "utility.h"
 #include "lio_sam/cloud_info.h"
 
-// Velodyne
-struct PointXYZIRT
+struct VelodynePointXYZIRT
 {
     PCL_ADD_POINT4D
     PCL_ADD_INTENSITY;
@@ -10,29 +9,29 @@ struct PointXYZIRT
     float time;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
-
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRT,  
+POINT_CLOUD_REGISTER_POINT_STRUCT (VelodynePointXYZIRT,
     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
     (uint16_t, ring, ring) (float, time, time)
 )
 
-// Ouster
-// struct PointXYZIRT {
-//     PCL_ADD_POINT4D;
-//     float intensity;
-//     uint32_t t;
-//     uint16_t reflectivity;
-//     uint8_t ring;
-//     uint16_t noise;
-//     uint32_t range;
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-// }EIGEN_ALIGN16;
+struct OusterPointXYZIRT {
+    PCL_ADD_POINT4D;
+    float intensity;
+    uint32_t t;
+    uint16_t reflectivity;
+    uint8_t ring;
+    uint16_t noise;
+    uint32_t range;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+POINT_CLOUD_REGISTER_POINT_STRUCT(OusterPointXYZIRT,
+    (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
+    (uint32_t, t, t) (uint16_t, reflectivity, reflectivity)
+    (uint8_t, ring, ring) (uint16_t, noise, noise) (uint32_t, range, range)
+)
 
-// POINT_CLOUD_REGISTER_POINT_STRUCT(PointXYZIRT,
-//     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
-//     (uint32_t, t, t) (uint16_t, reflectivity, reflectivity)
-//     (uint8_t, ring, ring) (uint16_t, noise, noise) (uint32_t, range, range)
-// )
+// Use the Velodyne point format as a common representation
+using PointXYZIRT = VelodynePointXYZIRT;
 
 const int queueLength = 2000;
 
@@ -57,7 +56,7 @@ private:
 
     std::deque<sensor_msgs::PointCloud2> cloudQueue;
     sensor_msgs::PointCloud2 currentCloudMsg;
-    
+
     double *imuTime = new double[queueLength];
     double *imuRotX = new double[queueLength];
     double *imuRotY = new double[queueLength];
@@ -68,6 +67,7 @@ private:
     Eigen::Affine3f transStartInverse;
 
     pcl::PointCloud<PointXYZIRT>::Ptr laserCloudIn;
+    pcl::PointCloud<OusterPointXYZIRT>::Ptr tmpOusterCloudIn;
     pcl::PointCloud<PointType>::Ptr   fullCloud;
     pcl::PointCloud<PointType>::Ptr   extractedCloud;
 
@@ -105,6 +105,7 @@ public:
     void allocateMemory()
     {
         laserCloudIn.reset(new pcl::PointCloud<PointXYZIRT>());
+        tmpOusterCloudIn.reset(new pcl::PointCloud<OusterPointXYZIRT>());
         fullCloud.reset(new pcl::PointCloud<PointType>());
         extractedCloud.reset(new pcl::PointCloud<PointType>());
 
@@ -197,15 +198,40 @@ public:
             return false;
 
         // convert cloud
-        currentCloudMsg = cloudQueue.front();
+        currentCloudMsg = std::move(cloudQueue.front());
         cloudQueue.pop_front();
-        pcl::fromROSMsg(currentCloudMsg, *laserCloudIn);
+        if (sensor == SensorType::VELODYNE)
+        {
+            pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
+        }
+        else if (sensor == SensorType::OUSTER)
+        {
+            // Convert to Velodyne format
+            pcl::moveFromROSMsg(currentCloudMsg, *tmpOusterCloudIn);
+            laserCloudIn->points.resize(tmpOusterCloudIn->size());
+            laserCloudIn->is_dense = tmpOusterCloudIn->is_dense;
+            for (size_t i = 0; i < tmpOusterCloudIn->size(); i++)
+            {
+                auto &src = tmpOusterCloudIn->points[i];
+                auto &dst = laserCloudIn->points[i];
+                dst.x = src.x;
+                dst.y = src.y;
+                dst.z = src.z;
+                dst.intensity = src.intensity;
+                dst.ring = src.ring;
+                dst.time = src.t * 1e-9f;
+            }
+        }
+        else
+        {
+            ROS_ERROR_STREAM("Unknown sensor type: " << int(sensor));
+            ros::shutdown();
+        }
 
         // get timestamp
         cloudHeader = currentCloudMsg.header;
         timeScanCur = cloudHeader.stamp.toSec();
-        timeScanEnd = timeScanCur + laserCloudIn->points.back().time; // Velodyne
-        // timeScanEnd = timeScanCur + (float)laserCloudIn->points.back().t / 1000000000.0; // Ouster
+        timeScanEnd = timeScanCur + laserCloudIn->points.back().time;
 
         // check dense flag
         if (laserCloudIn->is_dense == false)
@@ -232,15 +258,15 @@ public:
                 ROS_ERROR("Point cloud ring channel not available, please configure your point cloud data!");
                 ros::shutdown();
             }
-        }   
+        }
 
         // check point time
         if (deskewFlag == 0)
         {
             deskewFlag = -1;
-            for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
+            for (auto &field : currentCloudMsg.fields)
             {
-                if (currentCloudMsg.fields[i].name == timeField)
+                if (field.name == "time" || field.name == "t")
                 {
                     deskewFlag = 1;
                     break;
@@ -524,8 +550,7 @@ public:
             if (rangeMat.at<float>(rowIdn, columnIdn) != FLT_MAX)
                 continue;
 
-            thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].time); // Velodyne
-            // thisPoint = deskewPoint(&thisPoint, (float)laserCloudIn->points[i].t / 1000000000.0); // Ouster
+            thisPoint = deskewPoint(&thisPoint, laserCloudIn->points[i].time);
 
             rangeMat.at<float>(rowIdn, columnIdn) = range;
 
