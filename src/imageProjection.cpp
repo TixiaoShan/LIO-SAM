@@ -196,7 +196,7 @@ public:
             return false;
 
         // convert cloud
-        currentCloudMsg = cloudQueue.front();
+        currentCloudMsg = std::move(cloudQueue.front());
         cloudQueue.pop_front();
         if (sensor == SensorType::VELODYNE)
         {
