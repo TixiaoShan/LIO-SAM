@@ -14,7 +14,7 @@ import os
 import cv2
 import rospy
 import rosbag
-import progressbar
+from tqdm import tqdm
 from tf2_msgs.msg import TFMessage
 from datetime import datetime
 from std_msgs.msg import Header
@@ -188,8 +188,7 @@ def save_camera_data(bag, kitti_type, kitti, util, bridge, camera, camera_frame_
         calib.P = util['P{}'.format(camera_pad)]
     
     iterable = zip(image_datetimes, image_filenames)
-    bar = progressbar.ProgressBar()
-    for dt, filename in bar(iterable):
+    for dt, filename in tqdm(iterable, total=len(image_filenames)):
         image_filename = os.path.join(image_path, filename)
         cv_image = cv2.imread(image_filename)
         calib.height, calib.width = cv_image.shape[:2]
@@ -223,11 +222,10 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
             velo_datetimes.append(dt)
 
     iterable = zip(velo_datetimes, velo_filenames)
-    bar = progressbar.ProgressBar()
 
     count = 0
 
-    for dt, filename in bar(iterable):
+    for dt, filename in tqdm(iterable, total=len(velo_filenames)):
         if dt is None:
             continue
 
@@ -248,6 +246,9 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
         proj_y = np.maximum(0, proj_y).astype(np.int32)  # in [0,H-1]
         proj_y = proj_y.reshape(-1, 1)
         scan = np.concatenate((scan,proj_y), axis=1)
+        scan = scan.tolist()
+        for i in range(len(scan)):
+            scan[i][-1] = int(scan[i][-1])
 
         # create header
         header = Header()
