@@ -248,6 +248,9 @@ def save_velo_data(bag, kitti, velo_frame_id, topic):
         proj_y = np.maximum(0, proj_y).astype(np.int32)  # in [0,H-1]
         proj_y = proj_y.reshape(-1, 1)
         scan = np.concatenate((scan,proj_y), axis=1)
+        scan = scan.tolist()
+        for i in range(len(scan)):
+            scan[i][-1] = int(scan[i][-1])
 
         # create header
         header = Header()
