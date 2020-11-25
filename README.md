@@ -37,6 +37,8 @@
 
   - [**TODO**](#todo)
 
+  - [**Related Package**](#related-package)
+
   - [**Acknowledgement**](#acknowledgement)
 
 ## System architecture
@@ -214,6 +216,11 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 ## TODO
 
   - [ ] [Bug within imuPreintegration](https://github.com/TixiaoShan/LIO-SAM/issues/104)
+
+## Related Package
+
+  - [LIO-SAM with ROS2](https://github.com/CAKGOD/lio_sam_ros2)
+  - [LIO-SAM with Scan Context](https://github.com/gisbi-kim/SC-LIO-SAM)
 
 ## Acknowledgement
 
