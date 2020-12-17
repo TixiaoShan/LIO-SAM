@@ -219,6 +219,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 
 ## Related Package
 
+  - [Lidar-IMU calibration](https://github.com/chennuo0125-HIT/lidar_imu_calib)
   - [LIO-SAM with ROS2](https://github.com/CAKGOD/lio_sam_ros2)
   - [LIO-SAM with Scan Context](https://github.com/gisbi-kim/SC-LIO-SAM)
 
