@@ -1,5 +1,6 @@
 #include "utility.h"
 #include "lio_sam/cloud_info.h"
+#include "lio_sam/save_map.h"
 
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
@@ -75,6 +76,8 @@ public:
     ros::Subscriber subCloud;
     ros::Subscriber subGPS;
     ros::Subscriber subLoop;
+
+    ros::ServiceServer srvSaveMap;
 
     std::deque<nav_msgs::Odometry> gpsQueue;
     lio_sam::cloud_info cloudInfo;
@@ -165,6 +168,8 @@ public:
         subCloud = nh.subscribe<lio_sam::cloud_info>("lio_sam/feature/cloud_info", 1, &mapOptimization::laserCloudInfoHandler, this, ros::TransportHints().tcpNoDelay());
         subGPS   = nh.subscribe<nav_msgs::Odometry> (gpsTopic, 200, &mapOptimization::gpsHandler, this, ros::TransportHints().tcpNoDelay());
         subLoop  = nh.subscribe<std_msgs::Float64MultiArray>("lio_loop/loop_closure_detection", 1, &mapOptimization::loopInfoHandler, this, ros::TransportHints().tcpNoDelay());
+
+        srvSaveMap  = nh.advertiseService("lio_sam/save_map", &mapOptimization::saveMapService, this);
 
         pubHistoryKeyFrames   = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_history_cloud", 1);
         pubIcpKeyFrames       = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/icp_loop_closure_corrected_cloud", 1);
@@ -343,6 +348,71 @@ public:
 
 
 
+    bool saveMapService(lio_sam::save_mapRequest& req, lio_sam::save_mapResponse& res)
+    {
+      string saveMapDirectory;
+
+      cout << "****************************************************" << endl;
+      cout << "Saving map to pcd files ..." << endl;
+      if(req.destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
+      else saveMapDirectory = std::getenv("HOME") + req.destination;
+      cout << "Save destination: " << saveMapDirectory << endl;
+      // create directory and remove old files;
+      int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
+      unused = system((std::string("mkdir -p ") + saveMapDirectory).c_str());
+      // save key frame transformations
+      pcl::io::savePCDFileBinary(saveMapDirectory + "/trajectory.pcd", *cloudKeyPoses3D);
+      pcl::io::savePCDFileBinary(saveMapDirectory + "/transformations.pcd", *cloudKeyPoses6D);
+      // extract global point cloud map
+      pcl::PointCloud<PointType>::Ptr globalCornerCloud(new pcl::PointCloud<PointType>());
+      pcl::PointCloud<PointType>::Ptr globalCornerCloudDS(new pcl::PointCloud<PointType>());
+      pcl::PointCloud<PointType>::Ptr globalSurfCloud(new pcl::PointCloud<PointType>());
+      pcl::PointCloud<PointType>::Ptr globalSurfCloudDS(new pcl::PointCloud<PointType>());
+      pcl::PointCloud<PointType>::Ptr globalMapCloud(new pcl::PointCloud<PointType>());
+      for (int i = 0; i < (int)cloudKeyPoses3D->size(); i++) {
+          *globalCornerCloud += *transformPointCloud(cornerCloudKeyFrames[i],  &cloudKeyPoses6D->points[i]);
+          *globalSurfCloud   += *transformPointCloud(surfCloudKeyFrames[i],    &cloudKeyPoses6D->points[i]);
+          cout << "\r" << std::flush << "Processing feature cloud " << i << " of " << cloudKeyPoses6D->size() << " ...";
+      }
+
+      if(req.resolution != 0)
+      {
+        cout << "\n\nSave resolution: " << req.resolution << endl;
+
+        // down-sample and save corner cloud
+        downSizeFilterCorner.setInputCloud(globalCornerCloud);
+        downSizeFilterCorner.setLeafSize(req.resolution, req.resolution, req.resolution);
+        downSizeFilterCorner.filter(*globalCornerCloudDS);
+        pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloudDS);
+        // down-sample and save surf cloud
+        downSizeFilterSurf.setInputCloud(globalSurfCloud);
+        downSizeFilterSurf.setLeafSize(req.resolution, req.resolution, req.resolution);
+        downSizeFilterSurf.filter(*globalSurfCloudDS);
+        pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloudDS);
+      }
+      else
+      {
+        // save corner cloud
+        pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloud);
+        // save surf cloud
+        pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloud);
+      }
+
+      // save global point cloud map
+      *globalMapCloud += *globalCornerCloud;
+      *globalMapCloud += *globalSurfCloud;
+
+      int ret = pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMap.pcd", *globalMapCloud);
+      res.success = ret == 0;
+
+      downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
+      downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
+
+      cout << "****************************************************" << endl;
+      cout << "Saving map to pcd files completed\n" << endl;
+
+      return true;
+    }
 
     void visualizeGlobalMapThread()
     {
@@ -355,40 +425,12 @@ public:
         if (savePCD == false)
             return;
 
-        cout << "****************************************************" << endl;
-        cout << "Saving map to pcd files ..." << endl;
-        // create directory and remove old files;
-        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
-        int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
-        unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
-        // save key frame transformations
-        pcl::io::savePCDFileASCII(savePCDDirectory + "trajectory.pcd", *cloudKeyPoses3D);
-        pcl::io::savePCDFileASCII(savePCDDirectory + "transformations.pcd", *cloudKeyPoses6D);
-        // extract global point cloud map        
-        pcl::PointCloud<PointType>::Ptr globalCornerCloud(new pcl::PointCloud<PointType>());
-        pcl::PointCloud<PointType>::Ptr globalCornerCloudDS(new pcl::PointCloud<PointType>());
-        pcl::PointCloud<PointType>::Ptr globalSurfCloud(new pcl::PointCloud<PointType>());
-        pcl::PointCloud<PointType>::Ptr globalSurfCloudDS(new pcl::PointCloud<PointType>());
-        pcl::PointCloud<PointType>::Ptr globalMapCloud(new pcl::PointCloud<PointType>());
-        for (int i = 0; i < (int)cloudKeyPoses3D->size(); i++) {
-            *globalCornerCloud += *transformPointCloud(cornerCloudKeyFrames[i],  &cloudKeyPoses6D->points[i]);
-            *globalSurfCloud   += *transformPointCloud(surfCloudKeyFrames[i],    &cloudKeyPoses6D->points[i]);
-            cout << "\r" << std::flush << "Processing feature cloud " << i << " of " << cloudKeyPoses6D->size() << " ...";
+        lio_sam::save_mapRequest  req;
+        lio_sam::save_mapResponse res;
+
+        if(!saveMapService(req, res)){
+            cout << "Fail to save map" << endl;
         }
-        // down-sample and save corner cloud
-        downSizeFilterCorner.setInputCloud(globalCornerCloud);
-        downSizeFilterCorner.filter(*globalCornerCloudDS);
-        pcl::io::savePCDFileASCII(savePCDDirectory + "cloudCorner.pcd", *globalCornerCloudDS);
-        // down-sample and save surf cloud
-        downSizeFilterSurf.setInputCloud(globalSurfCloud);
-        downSizeFilterSurf.filter(*globalSurfCloudDS);
-        pcl::io::savePCDFileASCII(savePCDDirectory + "cloudSurf.pcd", *globalSurfCloudDS);
-        // down-sample and save global point cloud map
-        *globalMapCloud += *globalCornerCloud;
-        *globalMapCloud += *globalSurfCloud;
-        pcl::io::savePCDFileASCII(savePCDDirectory + "cloudGlobal.pcd", *globalMapCloud);
-        cout << "****************************************************" << endl;
-        cout << "Saving map to pcd files completed" << endl;
     }
 
     void publishGlobalMap()
