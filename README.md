@@ -179,6 +179,17 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/ouster-demo.gif" alt="drawing" width="300"/>
 </p>
 
+## Service
+  - /lio_sam/save_map
+    - save map as a PCD file.
+      ``` bash
+        rosservice call [service] [resolution] [destination]
+      ```
+      - Example:
+      ``` bash
+        $ rosservice call /lio_sam/save_map 0.2 "/Downloads/LOAM/"
+      ```
+
 ## Issues
 
   - **Zigzag or jerking behavior**: if your lidar and IMU data formats are consistent with the requirement of LIO-SAM, this problem is likely caused by un-synced timestamp of lidar and IMU data.
