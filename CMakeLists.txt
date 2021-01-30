@@ -32,6 +32,12 @@ add_message_files(
   cloud_info.msg
 )
 
+add_service_files(
+  DIRECTORY srv
+  FILES
+  save_map.srv
+)
+
 generate_messages(
   DEPENDENCIES
   geometry_msgs
