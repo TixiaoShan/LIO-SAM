@@ -875,6 +875,13 @@ public:
 
         downSizeFilterSurroundingKeyPoses.setInputCloud(surroundingKeyPoses);
         downSizeFilterSurroundingKeyPoses.filter(*surroundingKeyPosesDS);
+        for(auto& pt : surroundingKeyPosesDS->points)
+        {
+            pointSearchInd.resize(1);
+            pointSearchSqDis.resize(1);
+            kdtreeSurroundingKeyPoses->nearestKSearch(pt, 1, pointSearchInd, pointSearchSqDis);
+            pt.intensity = cloudKeyPoses3D->points[pointSearchInd[0]].intensity;
+        }
 
         // also extract some latest key frames in case the robot rotates in one position
         int numPoses = cloudKeyPoses3D->size();
