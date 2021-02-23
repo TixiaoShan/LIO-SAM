@@ -465,8 +465,6 @@ public:
         downSizeFilterGlobalMapKeyPoses.filter(*globalMapKeyPosesDS);
         for(auto& pt : globalMapKeyPosesDS->points)
         {
-            pointSearchIndGlobalMap.resize(1);
-            pointSearchSqDisGlobalMap.resize(1);
             kdtreeGlobalMap->nearestKSearch(pt, 1, pointSearchIndGlobalMap, pointSearchSqDisGlobalMap);
             pt.intensity = cloudKeyPoses3D->points[pointSearchIndGlobalMap[0]].intensity;
         }
@@ -877,8 +875,6 @@ public:
         downSizeFilterSurroundingKeyPoses.filter(*surroundingKeyPosesDS);
         for(auto& pt : surroundingKeyPosesDS->points)
         {
-            pointSearchInd.resize(1);
-            pointSearchSqDis.resize(1);
             kdtreeSurroundingKeyPoses->nearestKSearch(pt, 1, pointSearchInd, pointSearchSqDis);
             pt.intensity = cloudKeyPoses3D->points[pointSearchInd[0]].intensity;
         }
