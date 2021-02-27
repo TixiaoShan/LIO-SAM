@@ -84,6 +84,8 @@ private:
     double timeScanEnd;
     std_msgs::Header cloudHeader;
 
+    boost::shared_ptr<tf2_ros::Buffer> tf2_;
+    boost::shared_ptr<tf2_ros::TransformListener> tf2_listener_;
 
 public:
     ImageProjection():
@@ -117,6 +119,9 @@ public:
         cloudInfo.pointColInd.assign(N_SCAN*Horizon_SCAN, 0);
         cloudInfo.pointRange.assign(N_SCAN*Horizon_SCAN, 0);
 
+        tf2_.reset(new tf2_ros::Buffer());
+        tf2_listener_.reset(new tf2_ros::TransformListener(*tf2_));
+
         resetParameters();
     }
 
@@ -144,7 +149,17 @@ public:
 
     void imuHandler(const sensor_msgs::Imu::ConstPtr& imuMsg)
     {
-        sensor_msgs::Imu thisImu = imuConverter(*imuMsg);
+        sensor_msgs::Imu nonTransformedImu = imuConverter(*imuMsg);
+        sensor_msgs::Imu thisImu;
+
+        try
+        {
+            tf2_->transform(nonTransformedImu, thisImu, lidarFrame);
+        }
+        catch (tf2::TransformException& ex)
+        {
+            ROS_ERROR("%s", ex.what());
+        }
 
         std::lock_guard<std::mutex> lock1(imuLock);
         imuQueue.push_back(thisImu);
