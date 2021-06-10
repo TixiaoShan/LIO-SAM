@@ -11,6 +11,13 @@
     <origin xyz="0 0 0" rpy="0 0 0" />
   </joint>
 
+  <link name="lidar_link"> </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="lidar_link" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
   <link name="imu_link"> </link>
   <joint name="imu_joint" type="fixed">
     <parent link="chassis_link" />
@@ -18,10 +25,10 @@
     <origin xyz="0 0 0" rpy="0 0 0" />
   </joint>
 
-  <link name="velodyne"> </link>
-  <joint name="velodyne_joint" type="fixed">
-    <parent link="chassis_link" />
-    <child link="velodyne" />
+  <link name="laser_sensor_frame"> </link>
+  <joint name="laser_joint" type="fixed">
+    <parent link="imu_link" />
+    <child link="laser_sensor_frame" />
     <origin xyz="0 0 0" rpy="0 0 0" />
   </joint>
 

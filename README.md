@@ -17,6 +17,8 @@
 
   - [**System architecture**](#system-architecture)
 
+  - [**Notes on ROS2 branch**](#notes-on-ros2-branch)
+
   - [**Package dependency**](#dependency)
 
   - [**Package install**](#install)
@@ -51,34 +53,47 @@ We design a system that maintains two graphs and runs up to 10x faster than real
   - The factor graph in "mapOptimization.cpp" optimizes lidar odometry factor and GPS factor. This factor graph is maintained consistently throughout the whole test. 
   - The factor graph in "imuPreintegration.cpp" optimizes IMU and lidar odometry factor and estimates IMU bias. This factor graph is reset periodically and guarantees real-time odometry estimation at IMU frequency.
 
+## Notes on ROS2 branch
+
+There are some features of the original ROS1 version that are currently missing in this ROS2 version, namely:
+- The service for saving maps
+- Testing with Velodyne lidars and Microstrain IMUs
+- A launch file for the navsat module/GPS factor
+- The rviz2 configuration misses many elements
+
+This branch was tested with an Ouster lidar and a Xsens IMU using the following ROS2 drivers:
+- [ros2_ouster_drivers](https://github.com/ros-drivers/ros2_ouster_drivers)
+- [bluespace_ai_xsens_ros_mti_driver](https://github.com/bluespace-ai/bluespace_ai_xsens_ros_mti_driver)
+
+In these tests, the IMU was mounted on the bottom of the lidar such that their x-axes pointed in the same direction. The parameters `extrinsicRot` and `extrinsicRPY` in `params.yaml` correspond to this constellation.
+
 ## Dependency
 
-- [ROS](http://wiki.ros.org/ROS/Installation) (tested with Kinetic and Melodic)
+- [ROS2](https://docs.ros.org/en/foxy/Installation.html) (tested with Foxy on Ubuntu 20.04)
   ```
-  sudo apt-get install -y ros-kinetic-navigation
-  sudo apt-get install -y ros-kinetic-robot-localization
-  sudo apt-get install -y ros-kinetic-robot-state-publisher
+  sudo apt install ros-foxy-perception-pcl \
+                   ros-foxy-pcl-msgs \
+                   ros-foxy-vision-opencv \
+                   ros-foxy-xacro
   ```
 - [gtsam](https://github.com/borglab/gtsam/releases) (Georgia Tech Smoothing and Mapping library)
   ```
-  wget -O ~/Downloads/gtsam.zip https://github.com/borglab/gtsam/archive/4.0.2.zip
-  cd ~/Downloads/ && unzip gtsam.zip -d ~/Downloads/
-  cd ~/Downloads/gtsam-4.0.2/
-  mkdir build && cd build
-  cmake -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF ..
-  sudo make install -j8
+  # Add GTSAM-PPA
+  sudo add-apt-repository ppa:borglab/gtsam-release-4.0
+  sudo apt install libgtsam-dev libgtsam-unstable-dev
   ```
 
 ## Install
 
 Use the following commands to download and compile the package.
 
-```
-cd ~/catkin_ws/src
-git clone https://github.com/TixiaoShan/LIO-SAM.git
-cd ..
-catkin_make
-```
+  ```
+  cd ~/ros2_ws/src
+  git clone https://github.com/TixiaoShan/LIO-SAM.git
+  git checkout ros2
+  cd ..
+  colcon build
+  ```
 
 ## Prepare lidar data
 
@@ -106,34 +121,20 @@ The user needs to prepare the point cloud data in the correct format for cloud d
 
 ## Sample datasets
 
-  * Download some sample datasets to test the functionality of the package. The datasets below is configured to run using the default settings:
-    - **Walking dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-    - **Park dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-    - **Garden dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
+For data protection reasons, no data set can currently be made available for ROS2. 
 
-  * The datasets below need the parameters to be configured. In these datasets, the point cloud topic is "points_raw." The IMU topic is "imu_correct," which gives the IMU data in ROS REP105 standard. Because no IMU transformation is needed for this dataset, the following configurations need to be changed to run this dataset successfully:
-    - The "imuTopic" parameter in "config/params.yaml" needs to be set to "imu_correct".
-    - The "extrinsicRot" and "extrinsicRPY" in "config/params.yaml" needs to be set as identity matrices.
-      - **Rotation dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-      - **Campus dataset (large):** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-      - **Campus dataset (small):** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-      
-  * Ouster (OS1-128) dataset. No extrinsics need to be changed for this dataset if you are using the default settings. Please follow the Ouster notes below to configure the package to run with Ouster data. A video of the dataset can be found on [YouTube](https://youtu.be/O7fKgZQzkEo):
-    - **Rooftop dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
-
-  * KITTI dataset. The extrinsics can be found in the Notes KITTI section below. To generate more bags using other KITTI raw data, you can use the python script provided in "config/doc/kitti2bag".
-    - **2011_09_30_drive_0028:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
+README.md of the master branch contains some links to ROS1 rosbags. Using [ros1_bridge](https://github.com/ros2/ros1_bridge) with these rosbags and this ROS2 branch of LIO-SAM did however not succeeed for timing reasons.
 
 ## Run the package
 
 1. Run the launch file:
 ```
-roslaunch lio_sam run.launch
+ros2 launch lio_sam run.launch.py
 ```
 
 2. Play existing bag files:
 ```
-rosbag play your-bag.bag -r 3
+ros2 bag play your-bag.bag
 ```
 
 ## Other notes
@@ -179,17 +180,6 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/ouster-demo.gif" alt="drawing" width="300"/>
 </p>
 
-## Service
-  - /lio_sam/save_map
-    - save map as a PCD file.
-      ``` bash
-        rosservice call [service] [resolution] [destination]
-      ```
-      - Example:
-      ``` bash
-        $ rosservice call /lio_sam/save_map 0.2 "/Downloads/LOAM/"
-      ```
-
 ## Issues
 
   - **Zigzag or jerking behavior**: if your lidar and IMU data formats are consistent with the requirement of LIO-SAM, this problem is likely caused by un-synced timestamp of lidar and IMU data.
@@ -233,7 +223,6 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 ## Related Package
 
   - [Lidar-IMU calibration](https://github.com/chennuo0125-HIT/lidar_imu_calib)
-  - [LIO-SAM with ROS2](https://github.com/CAKGOD/lio_sam_ros2)
   - [LIO-SAM with Scan Context](https://github.com/gisbi-kim/SC-LIO-SAM)
 
 ## Acknowledgement
