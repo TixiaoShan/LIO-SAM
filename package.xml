@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>lio_sam</name>
   <version>1.0.0</version>
   <description>Lidar Odometry</description>
@@ -10,39 +11,48 @@
 
   <author>Tixiao Shan</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-  <build_depend>roscpp</build_depend>
-  <run_depend>roscpp</run_depend>
-  <build_depend>rospy</build_depend>
-  <run_depend>rospy</run_depend>
-
-  <build_depend>tf</build_depend>
-  <run_depend>tf</run_depend>
-
-  <build_depend>cv_bridge</build_depend>
-  <run_depend>cv_bridge</run_depend>
-
-  <build_depend>pcl_conversions</build_depend>
-  <run_depend>pcl_conversions</run_depend>
-
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
   <build_depend>std_msgs</build_depend>
-  <run_depend>std_msgs</run_depend>
   <build_depend>sensor_msgs</build_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <run_depend>geometry_msgs</run_depend>
   <build_depend>nav_msgs</build_depend>
-  <run_depend>nav_msgs</run_depend>
-  <build_depend>visualization_msgs</build_depend>
-  <run_depend>visualization_msgs</run_depend>
-
-  <build_depend>message_generation</build_depend>
-  <run_depend>message_generation</run_depend>
-  <build_depend>message_runtime</build_depend>
-  <run_depend>message_runtime</run_depend>
-
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>tf2_sensor_msgs</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>OpenCV</build_depend>
+  <build_depend>PCL</build_depend>
   <build_depend>GTSAM</build_depend>
-  <run_depend>GTSAM</run_depend>
+  <build_depend>Eigen</build_depend>
 
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>tf2_sensor_msgs</exec_depend>
+  <exec_depend>tf2_eigen</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>OpenCV</exec_depend>
+  <exec_depend>PCL</exec_depend>
+  <exec_depend>GTSAM</exec_depend>
+  <exec_depend>Eigen</exec_depend>
+  
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

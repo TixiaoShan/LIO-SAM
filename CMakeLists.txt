@@ -1,102 +1,102 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(lio_sam)
 
-set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS "-std=c++11")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -pthread")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
-find_package(catkin REQUIRED COMPONENTS
-  tf
-  roscpp
-  rospy
-  cv_bridge
-  # pcl library
-  pcl_conversions
-  # msgs
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  nav_msgs
-  message_generation
-  visualization_msgs
-)
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(PCL REQUIRED)
+find_package(GTSAM REQUIRED)
+find_package(Eigen REQUIRED)
 
-find_package(OpenMP REQUIRED)
-find_package(PCL REQUIRED QUIET)
-find_package(OpenCV REQUIRED QUIET)
-find_package(GTSAM REQUIRED QUIET)
-
-add_message_files(
-  DIRECTORY msg
-  FILES
-  cloud_info.msg
-)
-
-add_service_files(
-  DIRECTORY srv
-  FILES
-  save_map.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  std_msgs
-  nav_msgs
-  sensor_msgs
-)
-
-catkin_package(
-  INCLUDE_DIRS include
-  DEPENDS PCL GTSAM
-
-  CATKIN_DEPENDS
-  std_msgs
-  nav_msgs
-  geometry_msgs
-  sensor_msgs
-  message_runtime
-  message_generation
-  visualization_msgs
-)
-
-# include directories
 include_directories(
-	include
-	${catkin_INCLUDE_DIRS}
-	${PCL_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-	${GTSAM_INCLUDE_DIR}
+  include/lio_sam
 )
 
-# link directories
-link_directories(
-	include
-	${PCL_LIBRARY_DIRS}
-  ${OpenCV_LIBRARY_DIRS}
-  ${GTSAM_LIBRARY_DIRS}
-)
+rosidl_generate_interfaces(${PROJECT_NAME} "msg/CloudInfo.msg" DEPENDENCIES std_msgs sensor_msgs)
 
-###########
-## Build ##
-###########
-
-# Range Image Projection
-add_executable(${PROJECT_NAME}_imageProjection src/imageProjection.cpp)
-add_dependencies(${PROJECT_NAME}_imageProjection ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME}_imageProjection ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
-
-# Feature Association
 add_executable(${PROJECT_NAME}_featureExtraction src/featureExtraction.cpp)
-add_dependencies(${PROJECT_NAME}_featureExtraction ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(${PROJECT_NAME}_featureExtraction ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME}_featureExtraction rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL)
+rosidl_target_interfaces(${PROJECT_NAME}_featureExtraction ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# Mapping Optimization
-add_executable(${PROJECT_NAME}_mapOptmization src/mapOptmization.cpp)
-add_dependencies(${PROJECT_NAME}_mapOptmization ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_compile_options(${PROJECT_NAME}_mapOptmization PRIVATE ${OpenMP_CXX_FLAGS})
-target_link_libraries(${PROJECT_NAME}_mapOptmization ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${OpenMP_CXX_FLAGS} gtsam)
+add_executable(${PROJECT_NAME}_imageProjection src/imageProjection.cpp)
+ament_target_dependencies(${PROJECT_NAME}_imageProjection rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL)
+rosidl_target_interfaces(${PROJECT_NAME}_imageProjection ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# IMU Preintegration
 add_executable(${PROJECT_NAME}_imuPreintegration src/imuPreintegration.cpp)
-target_link_libraries(${PROJECT_NAME}_imuPreintegration ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} gtsam)
+ament_target_dependencies(${PROJECT_NAME}_imuPreintegration rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM Eigen)
+target_link_libraries(${PROJECT_NAME}_imuPreintegration gtsam)
+rosidl_target_interfaces(${PROJECT_NAME}_imuPreintegration ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+add_executable(${PROJECT_NAME}_mapOptimization src/mapOptmization.cpp)
+ament_target_dependencies(${PROJECT_NAME}_mapOptimization rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM)
+target_link_libraries(${PROJECT_NAME}_mapOptimization gtsam)
+rosidl_target_interfaces(${PROJECT_NAME}_mapOptimization ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_imageProjection
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_imuPreintegration
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_featureExtraction
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_mapOptimization
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY "include/"
+  DESTINATION include
+)
+
+ament_export_include_directories(include)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()
+
