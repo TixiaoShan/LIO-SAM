@@ -53,6 +53,8 @@ We design a system that maintains two graphs and runs up to 10x faster than real
 
 ## Dependency
 
+This is the original ROS1 implementation of LIO-SAM. For a ROS2 implementation see branch `ros2`.
+
 - [ROS](http://wiki.ros.org/ROS/Installation) (tested with Kinetic and Melodic)
   ```
   sudo apt-get install -y ros-kinetic-navigation
@@ -233,7 +235,6 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
 ## Related Package
 
   - [Lidar-IMU calibration](https://github.com/chennuo0125-HIT/lidar_imu_calib)
-  - [LIO-SAM with ROS2](https://github.com/CAKGOD/lio_sam_ros2)
   - [LIO-SAM with Scan Context](https://github.com/gisbi-kim/SC-LIO-SAM)
 
 ## Acknowledgement
