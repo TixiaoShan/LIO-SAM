@@ -67,7 +67,7 @@ This branch was tested with an Ouster lidar and a Xsens IMU using the following 
 
 In these tests, the IMU was mounted on the bottom of the lidar such that their x-axes pointed in the same direction. The parameters `extrinsicRot` and `extrinsicRPY` in `params.yaml` correspond to this constellation.
 
-## Dependency
+## Dependencies
 
 - [ROS2](https://docs.ros.org/en/foxy/Installation.html) (tested with Foxy on Ubuntu 20.04)
   ```
@@ -90,6 +90,7 @@ Use the following commands to download and compile the package.
   ```
   cd ~/ros2_ws/src
   git clone https://github.com/TixiaoShan/LIO-SAM.git
+  cd lio-sam
   git checkout ros2
   cd ..
   colcon build
