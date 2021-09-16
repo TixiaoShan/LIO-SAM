@@ -1591,7 +1591,7 @@ public:
         tf2::Stamped<tf2::Transform> temp_odom_to_lidar(t_odom_to_lidar, time_point, odometryFrame);
         geometry_msgs::msg::TransformStamped trans_odom_to_lidar;
         tf2::convert(temp_odom_to_lidar, trans_odom_to_lidar);
-        trans_odom_to_lidar.child_frame_id = lidarFrame;
+        trans_odom_to_lidar.child_frame_id = "lidar_link";
         br->sendTransform(trans_odom_to_lidar);
 
         // Publish odometry for ROS (incremental)
