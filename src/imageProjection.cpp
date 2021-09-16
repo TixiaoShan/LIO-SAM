@@ -43,15 +43,18 @@ private:
     std::mutex odoLock;
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subLaserCloud;
+    rclcpp::CallbackGroup::SharedPtr callbackGroupLidar;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloud;
 
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubExtractedCloud;
     rclcpp::Publisher<lio_sam::msg::CloudInfo>::SharedPtr pubLaserCloudInfo;
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subImu;
+    rclcpp::CallbackGroup::SharedPtr callbackGroupImu;
     std::deque<sensor_msgs::msg::Imu> imuQueue;
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subOdom;
+    rclcpp::CallbackGroup::SharedPtr callbackGroupOdom;
     std::deque<nav_msgs::msg::Odometry> odomQueue;
 
     std::deque<sensor_msgs::msg::PointCloud2> cloudQueue;
@@ -89,15 +92,32 @@ public:
     ImageProjection(const rclcpp::NodeOptions & options) :
             ParamServer("lio_sam_imageProjection", options), deskewFlag(0)
     {
+        callbackGroupLidar = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        callbackGroupImu = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        callbackGroupOdom = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+
+        auto lidarOpt = rclcpp::SubscriptionOptions();
+        lidarOpt.callback_group = callbackGroupLidar;
+        auto imuOpt = rclcpp::SubscriptionOptions();
+        imuOpt.callback_group = callbackGroupImu;
+        auto odomOpt = rclcpp::SubscriptionOptions();
+        odomOpt.callback_group = callbackGroupOdom;
+
         subImu = create_subscription<sensor_msgs::msg::Imu>(
             imuTopic, qos_imu,
-            std::bind(&ImageProjection::imuHandler, this, std::placeholders::_1));
+            std::bind(&ImageProjection::imuHandler, this, std::placeholders::_1),
+            imuOpt);
         subOdom = create_subscription<nav_msgs::msg::Odometry>(
             odomTopic + "_incremental", qos_imu,
-            std::bind(&ImageProjection::odometryHandler, this, std::placeholders::_1));
+            std::bind(&ImageProjection::odometryHandler, this, std::placeholders::_1),
+            odomOpt);
         subLaserCloud = create_subscription<sensor_msgs::msg::PointCloud2>(
             pointCloudTopic, qos_lidar,
-            std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1));
+            std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1),
+            lidarOpt);
 
         pubExtractedCloud = create_publisher<sensor_msgs::msg::PointCloud2>(
             "lio_sam/deskew/cloud_deskewed", 1);

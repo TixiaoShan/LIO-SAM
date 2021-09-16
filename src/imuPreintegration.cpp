@@ -28,6 +28,9 @@ public:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subImuOdometry;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subLaserOdometry;
 
+    rclcpp::CallbackGroup::SharedPtr callbackGroupImuOdometry;
+    rclcpp::CallbackGroup::SharedPtr callbackGroupLaserOdometry;
+
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubImuOdometry;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubImuPath;
 
@@ -48,12 +51,24 @@ public:
         tfBuffer = std::make_shared<tf2_ros::Buffer>(get_clock());
         tfListener = std::make_shared<tf2_ros::TransformListener>(*tfBuffer);
 
+        callbackGroupImuOdometry = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        callbackGroupLaserOdometry = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+
+        auto imuOdomOpt = rclcpp::SubscriptionOptions();
+        imuOdomOpt.callback_group = callbackGroupImuOdometry;
+        auto laserOdomOpt = rclcpp::SubscriptionOptions();
+        laserOdomOpt.callback_group = callbackGroupLaserOdometry;
+
         subLaserOdometry = create_subscription<nav_msgs::msg::Odometry>(
             "lio_sam/mapping/odometry", qos,
-            std::bind(&TransformFusion::lidarOdometryHandler, this, std::placeholders::_1));
+            std::bind(&TransformFusion::lidarOdometryHandler, this, std::placeholders::_1),
+            laserOdomOpt);
         subImuOdometry = create_subscription<nav_msgs::msg::Odometry>(
             odomTopic+"_incremental", qos_imu,
-            std::bind(&TransformFusion::imuOdometryHandler, this, std::placeholders::_1));
+            std::bind(&TransformFusion::imuOdometryHandler, this, std::placeholders::_1),
+            imuOdomOpt);
 
         pubImuOdometry = create_publisher<nav_msgs::msg::Odometry>(odomTopic, qos_imu);
         pubImuPath = create_publisher<nav_msgs::msg::Path>("lio_sam/imu/path", qos);
@@ -164,6 +179,9 @@ public:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subOdometry;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubImuOdometry;
 
+    rclcpp::CallbackGroup::SharedPtr callbackGroupImu;
+    rclcpp::CallbackGroup::SharedPtr callbackGroupOdom;
+
     bool systemInitialized = false;
 
     gtsam::noiseModel::Diagonal::shared_ptr priorPoseNoise;
@@ -206,12 +224,24 @@ public:
     IMUPreintegration(const rclcpp::NodeOptions & options) :
             ParamServer("lio_sam_imu_preintegration", options)
     {
+        callbackGroupImu = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        callbackGroupOdom = create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+
+        auto imuOpt = rclcpp::SubscriptionOptions();
+        imuOpt.callback_group = callbackGroupImu;
+        auto odomOpt = rclcpp::SubscriptionOptions();
+        odomOpt.callback_group = callbackGroupOdom;
+
         subImu = create_subscription<sensor_msgs::msg::Imu>(
             imuTopic, qos_imu,
-            std::bind(&IMUPreintegration::imuHandler, this, std::placeholders::_1));
+            std::bind(&IMUPreintegration::imuHandler, this, std::placeholders::_1)
+            imuOpt);
         subOdometry = create_subscription<nav_msgs::msg::Odometry>(
             "lio_sam/mapping/odometry_incremental", qos,
-            std::bind(&IMUPreintegration::odometryHandler, this, std::placeholders::_1));
+            std::bind(&IMUPreintegration::odometryHandler, this, std::placeholders::_1),
+            odomOpt);
 
         pubImuOdometry = create_publisher<nav_msgs::msg::Odometry>(odomTopic+"_incremental", qos_imu);
 
