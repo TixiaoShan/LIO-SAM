@@ -120,7 +120,7 @@ navsat:
   magnetic_declination_radians: 0
   yaw_offset: 0
   zero_altitude: false
-  broadcast_utm_transform: false
+  broadcast_utm_transform: true
   broadcast_utm_transform_as_parent_frame: false
   publish_filtered_gps: false
 

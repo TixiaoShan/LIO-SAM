@@ -60,6 +60,8 @@ public:
     Values isamCurrentEstimate;
     Eigen::MatrixXd poseCovariance;
 
+    tf::TransformListener utmToOdomListener;
+
     ros::Publisher pubLaserCloudSurround;
     ros::Publisher pubLaserOdometryGlobal;
     ros::Publisher pubLaserOdometryIncremental;
@@ -369,6 +371,7 @@ public:
       pcl::PointCloud<PointType>::Ptr globalSurfCloud(new pcl::PointCloud<PointType>());
       pcl::PointCloud<PointType>::Ptr globalSurfCloudDS(new pcl::PointCloud<PointType>());
       pcl::PointCloud<PointType>::Ptr globalMapCloud(new pcl::PointCloud<PointType>());
+      //pcl::PointCloud<PointType>::Ptr globalMapCloudAligned(new pcl::PointCloud<PointType>());
       for (int i = 0; i < (int)cloudKeyPoses3D->size(); i++) {
           *globalCornerCloud += *transformPointCloud(cornerCloudKeyFrames[i],  &cloudKeyPoses6D->points[i]);
           *globalSurfCloud   += *transformPointCloud(surfCloudKeyFrames[i],    &cloudKeyPoses6D->points[i]);
@@ -402,6 +405,34 @@ public:
       *globalMapCloud += *globalCornerCloud;
       *globalMapCloud += *globalSurfCloud;
 
+
+      // Save UTM coordinate of origin
+      tf::StampedTransform utmToMapTransform;
+      tf::Quaternion utmToMapQuat;
+      try {
+        utmToOdomListener.waitForTransform("/utm", "/map", ros::Time(0), ros::Duration(10.0));
+        utmToOdomListener.lookupTransform("/utm", "/map", ros::Time(0), utmToMapTransform);
+        
+        std::ofstream ofs(saveMapDirectory + "/GlobalMap.pcd" + ".utm", std::ofstream::out);
+        std::cout << "Saving UTM to " << saveMapDirectory + "/GlobalMap.pcd" + ".utm" << std::endl;
+        ofs << boost::format("%.6f %.6f %.6f") % utmToMapTransform.getOrigin().x() % utmToMapTransform.getOrigin().y() % utmToMapTransform.getOrigin().z() << std::endl;
+        ofs.close();
+
+        utmToMapQuat = utmToMapTransform.getRotation();
+      } 
+      catch (tf::TransformException& ex) {
+          ROS_ERROR("%s",ex.what());
+      }
+      catch (std::exception& e) {
+          ROS_ERROR("%s",e.what());
+      }
+
+
+      //Eigen::Affine3f alignMapToOdom = Eigen::Affine3f::Identity();
+      //alignMapToOdom.rotate (Eigen::AngleAxisf (0.26, Eigen::Vector3f::UnitY()));
+      //pcl::transformPointCloud (*globalMapCloud, *globalMapCloudAligned, alignMapToOdom);
+
+      //pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMapAligned.pcd", *globalMapCloudAligned);
       int ret = pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMap.pcd", *globalMapCloud);
       res.success = ret == 0;
 
