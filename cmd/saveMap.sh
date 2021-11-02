@@ -2,17 +2,20 @@
 
 cd ..
 
+echo "Enter save folder name "
+read folderName
 
-echo "Saving map $HOME/"LIO-SAM_Maps/GlobalMap" and converting to georeferenced las file" 
+
+echo "Saving maps to $HOME/"LIO-SAM_Maps/$folderName/" and converting to georeferenced las file" 
 
 rosservice call /lio_sam/save_map "resolution: 0.05
-destination: '/LIO-SAM_Maps'"
+destination: '/LIO-SAM_Maps/$folderName/'"
 
-python FillJson.py $HOME/"LIO-SAM_Maps/GlobalMap.pcd"
+python FillJson.py $HOME/"LIO-SAM_Maps/$folderName/GlobalMap.pcd"
 
-pdal pipeline ConvertLasToPcdWithGeoRef.json
+pdal pipeline $HOME/"LIO-SAM_Maps/$folderName/ConvertLasToPcdWithGeoRef.json"
 
 echo "Las info: "
 
-pdal info $HOME/"LIO-SAM_Maps/GlobalMap.las"
+pdal info $HOME/"LIO-SAM_Maps/$folderName/GlobalMap.las"
 
