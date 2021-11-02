@@ -1,7 +1,7 @@
 <launch>
 
     <arg name="project" default="lio_sam"/>
-    
+
     <!-- Parameters -->
     <rosparam file="$(find lio_sam)/config/params.yaml" command="load" />
 

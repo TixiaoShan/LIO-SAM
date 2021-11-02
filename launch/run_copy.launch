@@ -1,0 +1,39 @@
+<launch>
+
+    <arg name="project" default="lio_sam"/>
+    <arg name="pcap" default="" doc="Full file path to pcap file"/>
+    <arg name="ncom" default="" doc="Full file path to ncom file"/>
+    <arg name="play_pcap_one" default="true" doc="Loop pcap file"/>
+    <arg name="gps_time" default="true" doc="Use pcap gps timestamp"/>
+    <arg name="debug" default="false" doc="Debug print-outs"/>
+
+<!--
+    <group>
+        <include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch">
+            <arg name="gps_time" value="$(arg gps_time)"/>
+            <arg name="pcap" value="$(arg pcap)"/>
+            <arg name="read_once" value="$(arg play_pcap_one)"/>
+        </include>
+    </group>
+
+    
+
+
+    <node pkg="ncom_decoder" name="ncom_decoder_node" type="ncom_decoder_node" args="_ncom:=$(arg ncom) _debug:=$(arg debug)" output="screen"/>
+-->
+    <!-- Parameters -->
+    <rosparam file="$(find lio_sam)/config/params_copy.yaml" command="load" />
+
+    <!--- LOAM -->
+    <include file="$(find lio_sam)/launch/include/module_loam.launch" />
+
+    <!--- Robot State TF -->
+    <include file="$(find lio_sam)/launch/include/module_robot_state_publisher.launch" />
+
+    <!--- Run Navsat -->
+    <include file="$(find lio_sam)/launch/include/module_navsat.launch" />
+
+    <!--- Run Rviz-->
+    <include file="$(find lio_sam)/launch/include/module_rviz.launch" />
+
+</launch>

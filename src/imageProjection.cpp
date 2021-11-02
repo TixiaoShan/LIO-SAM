@@ -150,21 +150,21 @@ public:
         imuQueue.push_back(thisImu);
 
         // debug IMU data
-        // cout << std::setprecision(6);
-        // cout << "IMU acc: " << endl;
-        // cout << "x: " << thisImu.linear_acceleration.x << 
-        //       ", y: " << thisImu.linear_acceleration.y << 
-        //       ", z: " << thisImu.linear_acceleration.z << endl;
-        // cout << "IMU gyro: " << endl;
-        // cout << "x: " << thisImu.angular_velocity.x << 
-        //       ", y: " << thisImu.angular_velocity.y << 
-        //       ", z: " << thisImu.angular_velocity.z << endl;
-        // double imuRoll, imuPitch, imuYaw;
-        // tf::Quaternion orientation;
-        // tf::quaternionMsgToTF(thisImu.orientation, orientation);
-        // tf::Matrix3x3(orientation).getRPY(imuRoll, imuPitch, imuYaw);
-        // cout << "IMU roll pitch yaw: " << endl;
-        // cout << "roll: " << imuRoll << ", pitch: " << imuPitch << ", yaw: " << imuYaw << endl << endl;
+        //cout << std::setprecision(6);
+        //cout << "IMU acc: " << endl;
+        //cout << "x: " << thisImu.linear_acceleration.x << 
+        //      ", y: " << thisImu.linear_acceleration.y << 
+        //      ", z: " << thisImu.linear_acceleration.z << endl;
+        //cout << "IMU gyro: " << endl;
+        //cout << "x: " << thisImu.angular_velocity.x << 
+        //      ", y: " << thisImu.angular_velocity.y << 
+        //      ", z: " << thisImu.angular_velocity.z << endl;
+        //double imuRoll, imuPitch, imuYaw;
+        //tf::Quaternion orientation;
+        //tf::quaternionMsgToTF(thisImu.orientation, orientation);
+        //tf::Matrix3x3(orientation).getRPY(imuRoll, imuPitch, imuYaw);
+        //cout << "IMU roll pitch yaw: " << endl;
+        //cout << "roll: " << imuRoll << ", pitch: " << imuPitch << ", yaw: " << imuYaw << endl << endl;
     }
 
     void odometryHandler(const nav_msgs::Odometry::ConstPtr& odometryMsg)
@@ -472,14 +472,14 @@ public:
 
         // If the sensor moves relatively slow, like walking speed, positional deskew seems to have little benefits. Thus code below is commented.
 
-        // if (cloudInfo.odomAvailable == false || odomDeskewFlag == false)
-        //     return;
+        if (cloudInfo.odomAvailable == false || odomDeskewFlag == false)
+            return;
 
-        // float ratio = relTime / (timeScanEnd - timeScanCur);
+        float ratio = relTime / (timeScanEnd - timeScanCur);
 
-        // *posXCur = ratio * odomIncreX;
-        // *posYCur = ratio * odomIncreY;
-        // *posZCur = ratio * odomIncreZ;
+        *posZCur = ratio * odomIncreZ;
+        *posXCur = ratio * odomIncreX;
+        *posYCur = ratio * odomIncreY;
     }
 
     PointType deskewPoint(PointType *point, double relTime)
@@ -516,6 +516,11 @@ public:
 
     void projectPointCloud()
     {
+        //Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+        //transform.rotate (Eigen::AngleAxisf (0.26, Eigen::Vector3f::UnitY()));
+        //transform.translation() << 2.151, 0.224, 1.073;
+        //pcl::transformPointCloud (*laserCloudIn, *laserCloudIn, transform);
+
         int cloudSize = laserCloudIn->points.size();
         // range image projection
         for (int i = 0; i < cloudSize; ++i)

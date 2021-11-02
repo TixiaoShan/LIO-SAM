@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(lio_sam)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -pthread")
 
 find_package(catkin REQUIRED COMPONENTS
@@ -10,9 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   cv_bridge
-  # pcl library
+  pcl_ros
   pcl_conversions
-  # msgs
   std_msgs
   sensor_msgs
   geometry_msgs
@@ -46,6 +45,28 @@ generate_messages(
   sensor_msgs
 )
 
+
+# export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH to fix issue!!
+
+
+# include directories
+include_directories(
+	include
+	${catkin_INCLUDE_DIRS}
+	${PCL_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+	${GTSAM_INCLUDE_DIR}
+)
+set(GTSAM_INCLUDE_DIRS ${GTSAM_INCLUDE_DIR})
+
+# link directories
+link_directories(
+	include
+	${PCL_LIBRARY_DIRS}
+  ${OpenCV_LIBRARY_DIRS}
+  ${GTSAM_LIBRARY_DIRS}
+)
+
 catkin_package(
   INCLUDE_DIRS include
   DEPENDS PCL GTSAM
@@ -58,23 +79,6 @@ catkin_package(
   message_runtime
   message_generation
   visualization_msgs
-)
-
-# include directories
-include_directories(
-	include
-	${catkin_INCLUDE_DIRS}
-	${PCL_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-	${GTSAM_INCLUDE_DIR}
-)
-
-# link directories
-link_directories(
-	include
-	${PCL_LIBRARY_DIRS}
-  ${OpenCV_LIBRARY_DIRS}
-  ${GTSAM_LIBRARY_DIRS}
 )
 
 ###########

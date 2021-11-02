@@ -3,6 +3,7 @@
 #define _UTILITY_LIDAR_ODOMETRY_H_
 
 #include <ros/ros.h>
+#include <pcl_ros/transforms.h>
 
 #include <std_msgs/Header.h>
 #include <std_msgs/Float64MultiArray.h>
@@ -14,7 +15,8 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include <opencv/cv.h>
+//#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
