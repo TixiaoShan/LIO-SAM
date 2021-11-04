@@ -50,7 +50,7 @@ public:
                 tfListener.waitForTransform(lidarFrame, baselinkFrame, ros::Time(0), ros::Duration(3.0));
                 tfListener.lookupTransform(lidarFrame, baselinkFrame, ros::Time(0), lidar2Baselink);
             }
-            catch (tf::TransformException ex)
+            catch (tf::TransformException& ex)
             {
                 ROS_ERROR("%s",ex.what());
             }
