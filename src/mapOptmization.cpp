@@ -371,7 +371,7 @@ public:
       pcl::PointCloud<PointType>::Ptr globalSurfCloud(new pcl::PointCloud<PointType>());
       pcl::PointCloud<PointType>::Ptr globalSurfCloudDS(new pcl::PointCloud<PointType>());
       pcl::PointCloud<PointType>::Ptr globalMapCloud(new pcl::PointCloud<PointType>());
-      //pcl::PointCloud<PointType>::Ptr globalMapCloudAligned(new pcl::PointCloud<PointType>());
+      pcl::PointCloud<PointType>::Ptr globalMapCloudAligned(new pcl::PointCloud<PointType>());
       for (int i = 0; i < (int)cloudKeyPoses3D->size(); i++) {
           *globalCornerCloud += *transformPointCloud(cornerCloudKeyFrames[i],  &cloudKeyPoses6D->points[i]);
           *globalSurfCloud   += *transformPointCloud(surfCloudKeyFrames[i],    &cloudKeyPoses6D->points[i]);
@@ -404,45 +404,45 @@ public:
       // save global point cloud map
       *globalMapCloud += *globalCornerCloud;
       *globalMapCloud += *globalSurfCloud;
-
-
-      // Save UTM coordinate of origin
+      
       tf::StampedTransform utmToMapTransform;
       tf::Quaternion utmToMapQuat;
+      Eigen::Affine3f alignMapToNorth = Eigen::Affine3f::Identity();
+
       try {
+        // Wait for UTM transform
         utmToOdomListener.waitForTransform("/utm", "/map", ros::Time(0), ros::Duration(10.0));
         utmToOdomListener.lookupTransform("/utm", "/map", ros::Time(0), utmToMapTransform);
-        
+
+        // Save UTM coordinate of origin
         std::ofstream ofs(saveMapDirectory + "/GlobalMap.pcd" + ".utm", std::ofstream::out);
         std::cout << "Saving UTM to " << saveMapDirectory + "/GlobalMap.pcd" + ".utm" << std::endl;
         ofs << boost::format("%.6f %.6f %.6f") % utmToMapTransform.getOrigin().x() % utmToMapTransform.getOrigin().y() % utmToMapTransform.getOrigin().z() << std::endl;
-        ofs.close();
-
+        ofs.close();   
+        
+        // Transform global map
         utmToMapQuat = utmToMapTransform.getRotation();
-      } 
-      catch (tf::TransformException& ex) {
-          ROS_ERROR("%s",ex.what());
-      }
-      catch (std::exception& e) {
-          ROS_ERROR("%s",e.what());
-      }
+        alignMapToNorth.rotate (Eigen::AngleAxisf(utmToMapQuat.getAngle(), Eigen::Vector3f(utmToMapQuat.getAxis().getX(),utmToMapQuat.getAxis().getY(),utmToMapQuat.getAxis().getZ())));
+        pcl::transformPointCloud (*globalMapCloud, *globalMapCloudAligned, alignMapToNorth);    
+        } 
+        catch (tf::TransformException& ex) {
+            ROS_ERROR("%s",ex.what());
+        }
+        catch (std::exception& e) {
+            ROS_ERROR("%s",e.what());
+        }
 
+        // Saved cloud is now rotated to match north/east
+        int ret = pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMap.pcd", *globalMapCloudAligned);
+        res.success = ret == 0;
 
-      //Eigen::Affine3f alignMapToOdom = Eigen::Affine3f::Identity();
-      //alignMapToOdom.rotate (Eigen::AngleAxisf (0.26, Eigen::Vector3f::UnitY()));
-      //pcl::transformPointCloud (*globalMapCloud, *globalMapCloudAligned, alignMapToOdom);
+        downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
+        downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
 
-      //pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMapAligned.pcd", *globalMapCloudAligned);
-      int ret = pcl::io::savePCDFileBinary(saveMapDirectory + "/GlobalMap.pcd", *globalMapCloud);
-      res.success = ret == 0;
+        cout << "****************************************************" << endl;
+        cout << "Saving map to pcd files completed\n" << endl;
 
-      downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
-      downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
-
-      cout << "****************************************************" << endl;
-      cout << "Saving map to pcd files completed\n" << endl;
-
-      return true;
+        return true;
     }
 
     void visualizeGlobalMapThread()

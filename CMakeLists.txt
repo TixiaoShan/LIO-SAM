@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -pthread")
 
 find_package(catkin REQUIRED COMPONENTS
   tf
+  tf_conversions
   roscpp
   rospy
   cv_bridge
