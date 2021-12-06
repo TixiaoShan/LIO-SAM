@@ -83,9 +83,12 @@ public:
     string odometryFrame;
     string mapFrame;
 
+    bool useDownSampling;
+
     // GPS Settings
     bool useImuHeadingInitialization;
     bool useGpsElevation;
+    float gpsDistThreshold;
     float gpsCovThreshold;
     float poseCovThreshold;
 
@@ -158,6 +161,8 @@ public:
     {
         nh.param<std::string>("/robot_id", robot_id, "roboat");
 
+        nh.param<bool>("lio_sam/useDownSampling", useDownSampling, true);
+
         nh.param<std::string>("lio_sam/pointCloudTopic", pointCloudTopic, "points_raw");
         nh.param<std::string>("lio_sam/imuTopic", imuTopic, "imu_correct");
         nh.param<std::string>("lio_sam/odomTopic", odomTopic, "odometry/imu");
@@ -170,6 +175,7 @@ public:
 
         nh.param<bool>("lio_sam/useImuHeadingInitialization", useImuHeadingInitialization, false);
         nh.param<bool>("lio_sam/useGpsElevation", useGpsElevation, false);
+        nh.param<float>("lio_sam/gpsDistThreshold", gpsDistThreshold, 5.0);
         nh.param<float>("lio_sam/gpsCovThreshold", gpsCovThreshold, 2.0);
         nh.param<float>("lio_sam/poseCovThreshold", poseCovThreshold, 25.0);
 
