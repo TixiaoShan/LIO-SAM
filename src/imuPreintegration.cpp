@@ -236,7 +236,7 @@ public:
 
         subImu = create_subscription<sensor_msgs::msg::Imu>(
             imuTopic, qos_imu,
-            std::bind(&IMUPreintegration::imuHandler, this, std::placeholders::_1)
+            std::bind(&IMUPreintegration::imuHandler, this, std::placeholders::_1),
             imuOpt);
         subOdometry = create_subscription<nav_msgs::msg::Odometry>(
             "lio_sam/mapping/odometry_incremental", qos,
