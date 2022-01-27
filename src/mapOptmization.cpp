@@ -70,9 +70,11 @@ public:
     ros::Publisher pubIcpKeyFrames;
     ros::Publisher pubRecentKeyFrames;
     ros::Publisher pubRecentKeyFrame;
-    ros::Publisher pubRecentKeyFrameRaw;
     ros::Publisher pubCloudRegisteredRaw;
     ros::Publisher pubLoopConstraintEdge;
+
+    ros::Publisher pubSLAMInfo;
+    ros::Publisher pubSLAMDummy;
 
     ros::Subscriber subCloud;
     ros::Subscriber subGPS;
@@ -178,8 +180,10 @@ public:
 
         pubRecentKeyFrames    = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/map_local", 1);
         pubRecentKeyFrame     = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/cloud_registered", 1);
-        pubRecentKeyFrameRaw  = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/cloud_unregistered", 1);
         pubCloudRegisteredRaw = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/cloud_registered_raw", 1);
+
+        pubSLAMInfo           = nh.advertise<lio_sam::cloud_info>("lio_sam/mapping/slam_info", 1);
+        pubSLAMDummy          = nh.advertise<sensor_msgs::PointCloud2>("lio_sam/mapping/slam_dummy", 1);
 
         downSizeFilterCorner.setLeafSize(mappingCornerLeafSize, mappingCornerLeafSize, mappingCornerLeafSize);
         downSizeFilterSurf.setLeafSize(mappingSurfLeafSize, mappingSurfLeafSize, mappingSurfLeafSize);
@@ -1710,14 +1714,6 @@ public:
             *cloudOut += *transformPointCloud(laserCloudSurfLastDS,    &thisPose6D);
             publishCloud(&pubRecentKeyFrame, cloudOut, timeLaserInfoStamp, odometryFrame);
         }
-        // publish unregistered key frame
-        if (pubRecentKeyFrameRaw.getNumSubscribers() != 0)
-        {
-            pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
-            *cloudOut += *laserCloudCornerLastDS;
-            *cloudOut += *laserCloudSurfLastDS;
-            publishCloud(&pubRecentKeyFrameRaw, cloudOut, timeLaserInfoStamp, lidarFrame);
-        }
         // publish registered high-res raw cloud
         if (pubCloudRegisteredRaw.getNumSubscribers() != 0)
         {
@@ -1733,6 +1729,17 @@ public:
             globalPath.header.stamp = timeLaserInfoStamp;
             globalPath.header.frame_id = odometryFrame;
             pubPath.publish(globalPath);
+        }
+        // publish SLAM infomation for 3rd-party usage
+        if (pubSLAMInfo.getNumSubscribers() != 0)
+        {
+            lio_sam::cloud_info slamInfo;
+            slamInfo.header.stamp = timeLaserInfoStamp;
+            pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
+            *cloudOut += *laserCloudCornerLastDS;
+            *cloudOut += *laserCloudSurfLastDS;
+            slamInfo.keyframe_cloud = publishCloud(&pubSLAMDummy, cloudOut, timeLaserInfoStamp, lidarFrame);
+            slamInfo.keyframe_poses = publishCloud(&pubSLAMDummy, cloudKeyPoses6D, timeLaserInfoStamp, odometryFrame);
         }
     }
 };

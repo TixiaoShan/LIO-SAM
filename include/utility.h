@@ -1,6 +1,7 @@
 #pragma once
 #ifndef _UTILITY_LIDAR_ODOMETRY_H_
 #define _UTILITY_LIDAR_ODOMETRY_H_
+#define PCL_NO_PRECOMPILE 
 
 #include <ros/ros.h>
 
@@ -277,8 +278,8 @@ public:
     }
 };
 
-
-sensor_msgs::PointCloud2 publishCloud(ros::Publisher *thisPub, pcl::PointCloud<PointType>::Ptr thisCloud, ros::Time thisStamp, std::string thisFrame)
+template<typename T>
+sensor_msgs::PointCloud2 publishCloud(ros::Publisher *thisPub, const T& thisCloud, ros::Time thisStamp, std::string thisFrame)
 {
     sensor_msgs::PointCloud2 tempCloud;
     pcl::toROSMsg(*thisCloud, tempCloud);
