@@ -30,5 +30,6 @@ sensor_msgs/PointCloud2 cloud_surface   # extracted surface feature
 
 # 3rd party messages
 sensor_msgs/PointCloud2 key_frame_cloud
+sensor_msgs/PointCloud2 key_frame_color
 sensor_msgs/PointCloud2 key_frame_poses
 sensor_msgs/PointCloud2 key_frame_map
