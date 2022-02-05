@@ -84,7 +84,7 @@ private:
     double timeScanEnd;
     std_msgs::Header cloudHeader;
 
-    vector<int> columnIdnCountLivox;
+    vector<int> columnIdnCountVec;
 
 
 public:
@@ -141,7 +141,7 @@ public:
             imuRotZ[i] = 0;
         }
 
-        columnIdnCountLivox.assign(N_SCAN, 0);
+        columnIdnCountVec.assign(N_SCAN, 0);
     }
 
     ~ImageProjection(){}
@@ -552,8 +552,8 @@ public:
             }
             else if (sensor == SensorType::LIVOX)
             {
-                columnIdn = columnIdnCountLivox[rowIdn];
-                columnIdnCountLivox[rowIdn] += 1;
+                columnIdn = columnIdnCountVec[rowIdn];
+                columnIdnCountVec[rowIdn] += 1;
             }
             
             if (columnIdn < 0 || columnIdn >= Horizon_SCAN)

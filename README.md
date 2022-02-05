@@ -181,11 +181,12 @@ rosbag play your-bag.bag -r 3
     <img src="./config/doc/ouster-demo.gif" alt="drawing" width="300"/>
 </p>
 
-  - **Livox Horizon lidar:** Please note that solid-state lidar hasn't been extensively tested with LIO-SAM yet. An external IMU is also used here rather than the internal one. The support for such lidars is based on minimal change of the codebase from mechanical lidars. Other SLAM solutions may offer better implementations. More studies and suggestions are welcome. Please change the following parameters to make LIO-SAM work with Livox Horizon lidar:
+  - **Livox Horizon lidar:** Please note that solid-state lidar hasn't been extensively tested with LIO-SAM yet. An external IMU is also used here rather than the internal one. The support for such lidars is based on minimal change of the codebase from mechanical lidars. A customized [livox_ros_driver](https://github.com/TixiaoShan/livox_ros_driver) needs to be used to publish point cloud format that can be processed by LIO-SAM. Other SLAM solutions may offer better implementations. More studies and suggestions are welcome. Please change the following parameters to make LIO-SAM work with Livox Horizon lidar:
     - sensor: livox
     - N_SCAN: 6
     - Horizon_SCAN: 4000
     - edgeFeatureMinValidNum: 1
+    - Use [livox_ros_driver](https://github.com/TixiaoShan/livox_ros_driver) for data recording
 
 <p align='center'>
     <img src="./config/doc/livox-demo.gif" alt="drawing" width="600"/>
