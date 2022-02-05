@@ -10,7 +10,7 @@
     <img src="./config/doc/device-hand-2.png" alt="drawing" width="200"/>
     <img src="./config/doc/device-hand.png" alt="drawing" width="200"/>
     <img src="./config/doc/device-jackal.png" alt="drawing" width="200"/>
-    <img src="./config/doc/device-boat.png" alt="drawing" width="200"/>
+    <img src="./config/doc/device-livox-horizon.png" alt="drawing" width="200"/>
 </p>
 
 ## Menu
@@ -120,6 +120,9 @@ The user needs to prepare the point cloud data in the correct format for cloud d
   * Ouster (OS1-128) dataset. No extrinsics need to be changed for this dataset if you are using the default settings. Please follow the Ouster notes below to configure the package to run with Ouster data. A video of the dataset can be found on [YouTube](https://youtu.be/O7fKgZQzkEo):
     - **Rooftop dataset:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
 
+  * Livox Horizon dataset. Please refer to the following notes section for paramater changes.
+    - **Livox Horizon:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
+
   * KITTI dataset. The extrinsics can be found in the Notes KITTI section below. To generate more bags using other KITTI raw data, you can use the python script provided in "config/doc/kitti2bag".
     - **2011_09_30_drive_0028:** [[Google Drive](https://drive.google.com/drive/folders/1gJHwfdHCRdjP7vuT556pv8atqrCJPbUq?usp=sharing)]
 
@@ -176,6 +179,16 @@ rosbag play your-bag.bag -r 3
 <p align='center'>
     <img src="./config/doc/ouster-device.jpg" alt="drawing" width="300"/>
     <img src="./config/doc/ouster-demo.gif" alt="drawing" width="300"/>
+</p>
+
+  - **Livox Horizon lidar:** Please note that solid-state lidar hasn't been extensively tested with LIO-SAM yet. An external IMU is also used here rather than the internal one. The support for such lidars is based on minimal change of the codebase from mechanical lidars. Other SLAM solutions may offer better implementations. More studies and suggestions are welcome. Please change the following parameters to make LIO-SAM work with Livox Horizon lidar:
+    - sensor: livox
+    - N_SCAN: 6
+    - Horizon_SCAN: 4000
+    - edgeFeatureMinValidNum: 1
+
+<p align='center'>
+    <img src="./config/doc/livox-demo.gif" alt="drawing" width="600"/>
 </p>
 
 ## Service
