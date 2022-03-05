@@ -56,7 +56,6 @@ We design a system that maintains two graphs and runs up to 10x faster than real
 ## Notes on ROS2 branch
 
 There are some features of the original ROS1 version that are currently missing in this ROS2 version, namely:
-- The service for saving maps
 - Testing with Velodyne lidars and Microstrain IMUs
 - A launch file for the navsat module/GPS factor
 - The rviz2 configuration misses many elements
@@ -66,6 +65,7 @@ This branch was tested with an Ouster lidar and a Xsens IMU using the following 
 - [bluespace_ai_xsens_ros_mti_driver](https://github.com/bluespace-ai/bluespace_ai_xsens_ros_mti_driver)
 
 In these tests, the IMU was mounted on the bottom of the lidar such that their x-axes pointed in the same direction. The parameters `extrinsicRot` and `extrinsicRPY` in `params.yaml` correspond to this constellation.
+
 
 ## Dependencies
 
@@ -138,6 +138,13 @@ ros2 launch lio_sam run.launch.py
 ros2 bag play your-bag.bag
 ```
 
+## Save map
+```
+ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap
+```
+```
+ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: /Downloads/service_LOAM}"
+```
 ## Other notes
 
   - **Loop closure:** The loop function here gives an example of proof of concept. It is directly adapted from LeGO-LOAM loop closure. For more advanced loop closure implementation, please refer to [ScanContext](https://github.com/irapkaist/SC-LeGO-LOAM). Set the "loopClosureEnableFlag" in "params.yaml" to "true" to test the loop closure function. In Rviz, uncheck "Map (cloud)" and check "Map (global)". This is because the visualized map - "Map (cloud)" - is simply a stack of point clouds in Rviz. Their postion will not be updated after pose correction. The loop closure function here is simply adapted from LeGO-LOAM, which is an ICP-based method. Because ICP runs pretty slow, it is suggested that the playback speed is set to be "-r 1". You can try the Garden dataset for testing.
