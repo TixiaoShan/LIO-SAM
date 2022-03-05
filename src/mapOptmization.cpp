@@ -261,9 +261,6 @@ public:
         allocateMemory();
     }
 
-    // auto saveMapService = [this] (const std::shared_ptr<rmw_request_id_t> request_header,)
-
-
     void allocateMemory()
     {
         cloudKeyPoses3D.reset(new pcl::PointCloud<PointType>());
@@ -1470,10 +1467,6 @@ public:
                     continue;
                 else
                     lastGPSPoint = curGPSPoint;
-
-                cout << "****************************************************" << endl;
-                cout << "Add GPS data as factor" << endl;
-                cout << "****************************************************" << endl;
 
                 gtsam::Vector Vector3(3);
                 Vector3 << max(noise_x, 1.0f), max(noise_y, 1.0f), max(noise_z, 1.0f);
