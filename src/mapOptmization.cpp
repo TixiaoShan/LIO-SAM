@@ -177,9 +177,7 @@ public:
             "lio_loop/loop_closure_detection", qos,
             std::bind(&mapOptimization::loopInfoHandler, this, std::placeholders::_1));
 
-        // Not sure if this works...   
-
-           auto saveMapService = [this](const std::shared_ptr<rmw_request_id_t> request_header, const std::shared_ptr<lio_sam::srv::SaveMap::Request> req, std::shared_ptr<lio_sam::srv::SaveMap::Response> res) -> void {
+        auto saveMapService = [this](const std::shared_ptr<rmw_request_id_t> request_header, const std::shared_ptr<lio_sam::srv::SaveMap::Request> req, std::shared_ptr<lio_sam::srv::SaveMap::Response> res) -> void {
             (void)request_header;
             string saveMapDirectory;
 
@@ -208,25 +206,25 @@ public:
 
             if(req->resolution != 0)
             {
-            cout << "\n\nSave resolution: " << req->resolution << endl;
+               cout << "\n\nSave resolution: " << req->resolution << endl;
 
-            // down-sample and save corner cloud
-            downSizeFilterCorner.setInputCloud(globalCornerCloud);
-            downSizeFilterCorner.setLeafSize(req->resolution, req->resolution, req->resolution);
-            downSizeFilterCorner.filter(*globalCornerCloudDS);
-            pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloudDS);
-            // down-sample and save surf cloud
-            downSizeFilterSurf.setInputCloud(globalSurfCloud);
-            downSizeFilterSurf.setLeafSize(req->resolution, req->resolution, req->resolution);
-            downSizeFilterSurf.filter(*globalSurfCloudDS);
-            pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloudDS);
+               // down-sample and save corner cloud
+               downSizeFilterCorner.setInputCloud(globalCornerCloud);
+               downSizeFilterCorner.setLeafSize(req->resolution, req->resolution, req->resolution);
+               downSizeFilterCorner.filter(*globalCornerCloudDS);
+               pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloudDS);
+               // down-sample and save surf cloud
+               downSizeFilterSurf.setInputCloud(globalSurfCloud);
+               downSizeFilterSurf.setLeafSize(req->resolution, req->resolution, req->resolution);
+               downSizeFilterSurf.filter(*globalSurfCloudDS);
+               pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloudDS);
             }
             else
             {
-            // save corner cloud
-            pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloud);
-            // save surf cloud
-            pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloud);
+               // save corner cloud
+               pcl::io::savePCDFileBinary(saveMapDirectory + "/CornerMap.pcd", *globalCornerCloud);
+               // save surf cloud
+               pcl::io::savePCDFileBinary(saveMapDirectory + "/SurfMap.pcd", *globalSurfCloud);
             }
 
             // save global point cloud map
