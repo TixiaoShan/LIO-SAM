@@ -66,7 +66,6 @@ This branch was tested with an Ouster lidar and a Xsens IMU using the following 
 
 In these tests, the IMU was mounted on the bottom of the lidar such that their x-axes pointed in the same direction. The parameters `extrinsicRot` and `extrinsicRPY` in `params.yaml` correspond to this constellation.
 
-
 ## Dependencies
 
 - [ROS2](https://docs.ros.org/en/foxy/Installation.html) (tested with Foxy on Ubuntu 20.04)
