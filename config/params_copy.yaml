@@ -6,7 +6,7 @@ lio_sam:
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
   gpsTopic: "odometry/gps"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
-  useDownSampling: false                      # Set to false to disable all downsampling of scans
+  useDownSampling: true                      # Set to false to disable all downsampling of scans
 
   # Frames
   lidarFrame: "velodyne"
@@ -43,15 +43,15 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
 
-  extrinsicTrans: [-2.151 -0.224 -1.073]
+  extrinsicTrans: [-2.026, -0.033, -1.059]
 
-  extrinsicRot: [0.989138, -0.146554, 0.011313,
-                -0.146641,  0.989163, -0.0072832,
-                0.010123, 0.00886305, 0.999909]
+  extrinsicRot: [0.972496,  -0.126716,  0.195436,
+                0.118471,  0.991522,  0.0533645,
+                -0.200541, -0.0287432,   0.979264]
                 
-  extrinsicRPY: [0.989138, -0.146554, 0.011313,
-                -0.146641,  0.989163, -0.0072832,
-                0.010123, 0.00886305, 0.999909]
+  extrinsicRPY: [0.972496,  -0.126716,  0.195436,
+                0.118471,  0.991522,  0.0533645,
+                -0.200541, -0.0287432,   0.979264]
 
 
   # LOAM feature threshold
@@ -70,7 +70,7 @@ lio_sam:
   rotation_tollerance: 1000                     # radians
 
   # CPU Params
-  numberOfCores: 4                              # number of cores for mapping optimization
+  numberOfCores: 8                              # number of cores for mapping optimization
   mappingProcessInterval: 0.10                  # seconds, regulate mapping frequency
 
   # Surrounding map

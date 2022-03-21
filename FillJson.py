@@ -62,7 +62,7 @@ jsonList.append({"type":"filters.reprojection",
                 "in_srs":in_srs,
                 "out_srs":out_srs})
 jsonList.append({"type":"writers.las",
-                "a_srs":"EPSG:32632",
+                "a_srs":"EPSG:3006",
                 "filename":cloudFile.replace(".pcd", ".las")})
 
 jsonFile = os.path.dirname(pcdFile) + "/ConvertLasToPcdWithGeoRef.json"
