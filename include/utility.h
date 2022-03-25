@@ -256,6 +256,10 @@ public:
 
     sensor_msgs::Imu imuConverter(const sensor_msgs::Imu& imu_in)
     {
+        // std::cout << "Acceleration x in: " << imu_in.linear_acceleration.x << std::endl;
+        // std::cout << "Acceleration y in: " << imu_in.linear_acceleration.y << std::endl;
+        // std::cout << "Acceleration z in: " << imu_in.linear_acceleration.z << std::endl;
+        // std::cout << " ===================================00 " << std::endl;
         sensor_msgs::Imu imu_out = imu_in;
         // rotate acceleration
         Eigen::Vector3d acc(imu_in.linear_acceleration.x, imu_in.linear_acceleration.y, imu_in.linear_acceleration.z);
@@ -263,6 +267,12 @@ public:
         imu_out.linear_acceleration.x = acc.x();
         imu_out.linear_acceleration.y = acc.y();
         imu_out.linear_acceleration.z = acc.z();
+
+        // std::cout << "Acceleration x out: " << acc.x() << std::endl;
+        // std::cout << "Acceleration y out: " << acc.y() << std::endl;
+        // std::cout << "Acceleration z out: " << acc.z() << std::endl;
+        // std::cout << " ===================================00 " << std::endl;
+
         // rotate gyroscope
         Eigen::Vector3d gyr(imu_in.angular_velocity.x, imu_in.angular_velocity.y, imu_in.angular_velocity.z);
         gyr = extRot * gyr;
