@@ -475,7 +475,7 @@ public:
         *posXCur = 0; *posYCur = 0; *posZCur = 0;
 
         // If the sensor moves relatively slow, like walking speed, positional deskew seems to have little benefits. Thus code below is commented.
-
+        return;
         if (cloudInfo.odomAvailable == false || odomDeskewFlag == false)
             return;
 

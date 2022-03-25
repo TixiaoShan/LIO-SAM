@@ -1,12 +1,12 @@
 lio_sam:
   # Topics
-  pointCloudTopic: "velodyne_points"          # Point cloud data
+  pointCloudTopic: "/velodyne_points"          # Point cloud data
   imuTopic: "/gpsimu_driver/imu_data"         # IMU data
 
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
-  gpsTopic: "odometry/gps"                    # GPS odometry topic from navsat, see module_navsat.launch file
+  gpsTopic: "odometry/navsat"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
-  useDownSampling: false                      # Set to false to disable all downsampling of scans
+  useDownSampling: true                      # Set to false to disable all downsampling of scans
 
   # Frames
   lidarFrame: "velodyne"
@@ -43,15 +43,18 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
 
-  extrinsicTrans: [-2.151 -0.224 -1.073]
+  extrinsicTrans: [-0.681 0 -0.813]
 
-  extrinsicRot: [0.989138, -0.146554, 0.011313,
-                -0.146641,  0.989163, -0.0072832,
-                0.010123, 0.00886305, 0.999909]
+
+  extrinsicRot: [0.9995714, 0.0254011, 0.0145491,
+               -0.0254874, 0.9996584, 0.0057800,
+                -0.0143973, -0.0061484, 0.9998775]
+
+
                 
-  extrinsicRPY: [0.989138, -0.146554, 0.011313,
-                -0.146641,  0.989163, -0.0072832,
-                0.010123, 0.00886305, 0.999909]
+  extrinsicRPY: [0.9995714, 0.0254011, 0.0145491,
+               -0.0254874, 0.9996584, 0.0057800,
+                -0.0143973, -0.0061484, 0.9998775]
 
 
   # LOAM feature threshold
@@ -84,7 +87,7 @@ lio_sam:
   loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
-  historyKeyframeSearchTimeDiff: 60.0           # seconds, key frame that is n seconds older will be considered for loop closure
+  historyKeyframeSearchTimeDiff: 15.0           # seconds, key frame that is n seconds older will be considered for loop closure
   historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a submap for loop closure
   historyKeyframeFitnessScore: 0.2              # icp threshold, the smaller the better alignment
 
@@ -94,11 +97,9 @@ lio_sam:
   globalMapVisualizationLeafSize: 0.4           # meters, global map visualization cloud density
 
 
-
-
 # Navsat (convert GPS coordinates to Cartesian)
 navsat:
-  frequency: 50
+  frequency: 10500
   wait_for_datum: false
   delay: 0.0
   magnetic_declination_radians: 0.08
@@ -106,7 +107,7 @@ navsat:
   zero_altitude: false
   broadcast_utm_transform: true
   broadcast_utm_transform_as_parent_frame: false
-  publish_filtered_gps: false
+  publish_filtered_gps: true
 
 # EKF for Navsat
 ekf_gps:

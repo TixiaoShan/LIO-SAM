@@ -133,6 +133,7 @@ public:
 
     std::mutex mtx;
     std::mutex mtxLoopInfo;
+    std::mutex mtxGpsQueue;
 
     bool isDegenerate = false;
     cv::Mat matP;
@@ -275,6 +276,7 @@ public:
 
     void gpsHandler(const nav_msgs::Odometry::ConstPtr& gpsMsg)
     {
+        std::scoped_lock tmpmtx(mtxGpsQueue);
         gpsQueue.push_back(*gpsMsg);
     }
 
@@ -340,20 +342,6 @@ public:
         thisPose6D.yaw   = transformIn[2];
         return thisPose6D;
     }
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
 
     bool saveMapService(lio_sam::save_mapRequest& req, lio_sam::save_mapResponse& res)
     {
@@ -527,11 +515,12 @@ public:
             downSizeFilterGlobalMapKeyFrames.setLeafSize(globalMapVisualizationLeafSize, globalMapVisualizationLeafSize, globalMapVisualizationLeafSize); // for global map visualization
             downSizeFilterGlobalMapKeyFrames.setInputCloud(globalMapKeyFrames);
             downSizeFilterGlobalMapKeyFrames.filter(*globalMapKeyFramesDS);
-            publishCloud(&pubLaserCloudSurround, globalMapKeyFramesDS, timeLaserInfoStamp, odometryFrame);
+            publishCloud(pubLaserCloudSurround, globalMapKeyFramesDS, timeLaserInfoStamp, odometryFrame);
         }
         else {
-            publishCloud(&pubLaserCloudSurround, globalMapKeyFrames, timeLaserInfoStamp, odometryFrame);
+            publishCloud(pubLaserCloudSurround, globalMapKeyFrames, timeLaserInfoStamp, odometryFrame);
         }
+    }
 
     void loopClosureThread()
     {
@@ -810,15 +799,6 @@ public:
     }
 
 
-
-
-
-
-
-    
-
-
-
     void updateInitialGuess()
     {
         // save current transformation before any processing
@@ -826,6 +806,27 @@ public:
 
         static Eigen::Affine3f lastImuTransformation;
         // initialization
+        bool useGpsPos = true;
+        std::scoped_lock tmpmtx(mtxGpsQueue);
+		auto closesttimestamp
+			= std::find_if(gpsQueue.begin(), gpsQueue.end(), [=](nav_msgs::Odometry gpsMsg) {
+				  return(gpsMsg.header.stamp.toSec() > timeLaserInfoCur - 0.05
+					  && gpsMsg.header.stamp.toSec() < timeLaserInfoCur + 0.05); 
+			  });
+		if (closesttimestamp == gpsQueue.end()) {
+			std::cout << "missing gpsmessage within time barrier 1" << std::endl;
+			closesttimestamp
+			= std::find_if(gpsQueue.begin(), gpsQueue.end(), [=](nav_msgs::Odometry gpsMsg) {
+				  return(gpsMsg.header.stamp.toSec() > timeLaserInfoCur - 0.2
+					  && gpsMsg.header.stamp.toSec() < timeLaserInfoCur + 0.2); 
+			  });
+              if (closesttimestamp == gpsQueue.end()){
+                    std::cout << "missing gpsmessage within time barrier 2" << std::endl;
+                    useGpsPos = false;
+                    std::cout <<"size of gps queue"<<gpsQueue.size()<<std::endl;
+              }
+           
+		};
         if (cloudKeyPoses3D->points.empty())
         {
             transformTobeMapped[0] = cloudInfo.imuRollInit;
@@ -844,8 +845,21 @@ public:
         static Eigen::Affine3f lastImuPreTransformation;
         if (cloudInfo.odomAvailable == true)
         {
-            Eigen::Affine3f transBack = pcl::getTransformation(cloudInfo.initialGuessX,    cloudInfo.initialGuessY,     cloudInfo.initialGuessZ, 
+             Eigen::Affine3f transBack;
+            if (useGpsPos==false){
+                transBack = pcl::getTransformation(cloudInfo.initialGuessX,    cloudInfo.initialGuessY,     cloudInfo.initialGuessZ, 
                                                                cloudInfo.initialGuessRoll, cloudInfo.initialGuessPitch, cloudInfo.initialGuessYaw);
+            }
+            else{
+                tf::Quaternion orientation;
+                tf::quaternionMsgToTF(closesttimestamp->pose.pose.orientation, orientation);
+
+                double roll, pitch, yaw;
+                tf::Matrix3x3(orientation).getRPY(roll, pitch, yaw);
+                transBack = pcl::getTransformation(closesttimestamp->pose.pose.position.x,    closesttimestamp->pose.pose.position.y,     closesttimestamp->pose.pose.position.z, 
+                                                               roll, pitch, yaw);
+            }
+            
             if (lastImuPreTransAvailable == false)
             {
                 lastImuPreTransformation = transBack;
@@ -1452,6 +1466,7 @@ public:
 
     void addGPSFactor()
     {
+        std::scoped_lock tmpmtx(mtxGpsQueue);
         if (gpsQueue.empty())
             return;
 
