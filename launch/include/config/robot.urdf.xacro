@@ -18,6 +18,7 @@
     <origin xyz="0 0 0" rpy="0 0 0" />
   </joint>
 
+
   <link name="velodyne"> </link>
   <joint name="velodyne_joint" type="fixed">
     <parent link="chassis_link"/>
