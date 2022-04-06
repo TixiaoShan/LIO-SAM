@@ -60,7 +60,6 @@
 #include <mutex>
 
 using namespace std;
-
 typedef pcl::PointXYZI PointType;
 
 enum class SensorType { VELODYNE, OUSTER, LIVOX };
@@ -343,14 +342,14 @@ void imuRPY2rosRPY(sensor_msgs::Imu *thisImuMsg, T *rosRoll, T *rosPitch, T *ros
     *rosYaw = imuYaw;
 }
 
-
-float pointDistance(PointType p)
+template<class T>
+float pointDistance(T p)
 {
     return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
 }
 
-
-float pointDistance(PointType p1, PointType p2)
+template<class T>
+float pointDistance(T p1, T p2)
 {
     return sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z));
 }
