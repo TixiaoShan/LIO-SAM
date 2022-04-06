@@ -808,25 +808,21 @@ public:
         // initialization
         bool useGpsPos = true;
         std::scoped_lock tmpmtx(mtxGpsQueue);
-		auto closesttimestamp
-			= std::find_if(gpsQueue.begin(), gpsQueue.end(), [=](nav_msgs::Odometry gpsMsg) {
-				  return(gpsMsg.header.stamp.toSec() > timeLaserInfoCur - 0.05
-					  && gpsMsg.header.stamp.toSec() < timeLaserInfoCur + 0.05); 
-			  });
-		if (closesttimestamp == gpsQueue.end()) {
-			std::cout << "missing gpsmessage within time barrier 1" << std::endl;
-			closesttimestamp
-			= std::find_if(gpsQueue.begin(), gpsQueue.end(), [=](nav_msgs::Odometry gpsMsg) {
-				  return(gpsMsg.header.stamp.toSec() > timeLaserInfoCur - 0.2
-					  && gpsMsg.header.stamp.toSec() < timeLaserInfoCur + 0.2); 
-			  });
-              if (closesttimestamp == gpsQueue.end()){
-                    std::cout << "missing gpsmessage within time barrier 2" << std::endl;
-                    useGpsPos = false;
-                    std::cout <<"size of gps queue"<<gpsQueue.size()<<std::endl;
-              }
-           
-		};
+
+		auto compareFunctor = [](nav_msgs::Odometry& a, double b) { return a.header.stamp.toSec() < b; };
+        auto closesttimestamp = std::lower_bound(gpsQueue.begin(), gpsQueue.end(), timeLaserInfoCur, compareFunctor);
+        if(closesttimestamp == gpsQueue.end()) {
+            closesttimestamp--;
+            if(timeLaserInfoCur-closesttimestamp->header.stamp.toSec() > 0.2) {
+                std::cout << "Missing GPS message within time barrier" << std::endl;
+                std::cout << "Current Scan time: " << std::setprecision(15) << timeLaserInfoCur << std::endl;
+                std::cout << "Last GPS time: " << std::setprecision(15) << closesttimestamp->header.stamp.toSec() << std::endl;
+                std::cout << "Message is: " << timeLaserInfoCur-closesttimestamp->header.stamp.toSec() << " seconds old" << std::endl;
+                std::cout << "Size of GPS queue " << gpsQueue.size() << std::endl;
+                useGpsPos = false;
+            }   
+        }
+
         if (cloudKeyPoses3D->points.empty())
         {
             transformTobeMapped[0] = cloudInfo.imuRollInit;
@@ -845,10 +841,14 @@ public:
         static Eigen::Affine3f lastImuPreTransformation;
         if (cloudInfo.odomAvailable == true)
         {
-             Eigen::Affine3f transBack;
+            Eigen::Affine3f transBack;
             if (useGpsPos==false){
-                transBack = pcl::getTransformation(cloudInfo.initialGuessX,    cloudInfo.initialGuessY,     cloudInfo.initialGuessZ, 
-                                                               cloudInfo.initialGuessRoll, cloudInfo.initialGuessPitch, cloudInfo.initialGuessYaw);
+                transBack = pcl::getTransformation(cloudInfo.initialGuessX,
+                                                   cloudInfo.initialGuessY,
+                                                   cloudInfo.initialGuessZ,
+                                                   cloudInfo.initialGuessRoll,
+                                                   cloudInfo.initialGuessPitch,
+                                                   cloudInfo.initialGuessYaw);
             }
             else{
                 tf::Quaternion orientation;
@@ -856,8 +856,12 @@ public:
 
                 double roll, pitch, yaw;
                 tf::Matrix3x3(orientation).getRPY(roll, pitch, yaw);
-                transBack = pcl::getTransformation(closesttimestamp->pose.pose.position.x,    closesttimestamp->pose.pose.position.y,     closesttimestamp->pose.pose.position.z, 
-                                                               roll, pitch, yaw);
+                transBack = pcl::getTransformation(closesttimestamp->pose.pose.position.x, 
+                                                   closesttimestamp->pose.pose.position.y,
+                                                   closesttimestamp->pose.pose.position.z, 
+                                                   roll, 
+                                                   pitch, 
+                                                   yaw);
             }
             
             if (lastImuPreTransAvailable == false)
@@ -1539,6 +1543,7 @@ public:
                 gtsam::GPSFactor gps_factor(cloudKeyPoses3D->size(), gtsam::Point3(gps_x, gps_y, gps_z), gps_noise);
                 gtSAMgraph.add(gps_factor);
 
+               
                 aLoopIsClosed = true;
                 break;
             }
