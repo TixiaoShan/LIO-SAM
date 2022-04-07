@@ -196,14 +196,9 @@ public:
 
     bool cachePointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
     {
-        // cache point cloud
-        cloudQueue.push_back(*laserCloudMsg);
-        if (cloudQueue.size() <= 2)
-            return false;
-
-        // convert cloud
-        currentCloudMsg = std::move(cloudQueue.front());
-        cloudQueue.pop_front();
+    
+        currentCloudMsg = std::move(*laserCloudMsg);
+        
         if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
         {
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
