@@ -30,7 +30,8 @@ using symbol_shorthand::G; // GPS pose
 struct PointXYZIRPYT
 {
     PCL_ADD_POINT4D
-    PCL_ADD_INTENSITY;                  // preferred way of adding a XYZ+padding
+    PCL_ADD_INTENSITY
+    PCL_ADD_RGB
     float roll;
     float pitch;
     float yaw;
@@ -42,7 +43,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRPYT,
                                    (float, x, x) (float, y, y)
                                    (float, z, z) (float, intensity, intensity)
                                    (float, roll, roll) (float, pitch, pitch) (float, yaw, yaw)
-                                   (double, time, time))
+                                   (double, time, time) (float, rgb, rgb))
 
 typedef PointXYZIRPYT  PointTypePose;
 
@@ -286,6 +287,7 @@ public:
         po->y = transPointAssociateToMap(1,0) * pi->x + transPointAssociateToMap(1,1) * pi->y + transPointAssociateToMap(1,2) * pi->z + transPointAssociateToMap(1,3);
         po->z = transPointAssociateToMap(2,0) * pi->x + transPointAssociateToMap(2,1) * pi->y + transPointAssociateToMap(2,2) * pi->z + transPointAssociateToMap(2,3);
         po->intensity = pi->intensity;
+        po->rgb = pi->rgb;
     }
 
     pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, PointTypePose* transformIn)
@@ -305,6 +307,7 @@ public:
             cloudOut->points[i].y = transCur(1,0) * pointFrom.x + transCur(1,1) * pointFrom.y + transCur(1,2) * pointFrom.z + transCur(1,3);
             cloudOut->points[i].z = transCur(2,0) * pointFrom.x + transCur(2,1) * pointFrom.y + transCur(2,2) * pointFrom.z + transCur(2,3);
             cloudOut->points[i].intensity = pointFrom.intensity;
+            cloudOut->points[i].rgb = pointFrom.rgb;
         }
         return cloudOut;
     }
@@ -1126,6 +1129,7 @@ public:
                     coeff.y = s * lb;
                     coeff.z = s * lc;
                     coeff.intensity = s * ld2;
+                    coeff.rgb = pointOri.rgb;
 
                     if (s > 0.1) {
                         laserCloudOriCornerVec[i] = pointOri;
@@ -1197,6 +1201,7 @@ public:
                     coeff.y = s * pb;
                     coeff.z = s * pc;
                     coeff.intensity = s * pd2;
+                    coeff.rgb = pointOri.rgb;
 
                     if (s > 0.1) {
                         laserCloudOriSurfVec[i] = pointOri;

@@ -60,7 +60,23 @@
 #include <mutex>
 
 using namespace std;
-typedef pcl::PointXYZI PointType;
+
+struct PointXYZIRTRGB {
+    PCL_ADD_POINT4D
+    PCL_ADD_INTENSITY;
+    PCL_ADD_RGB;
+    std::uint16_t ring;
+    float time;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+
+POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIRTRGB,
+    (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
+    (std::uint16_t, ring, ring) (float, time, time) (float, rgb, rgb)
+)
+
+// typedef pcl::PointXYZI PointType;
+typedef PointXYZIRTRGB PointType;
 
 enum class SensorType { VELODYNE, OUSTER, LIVOX };
 
