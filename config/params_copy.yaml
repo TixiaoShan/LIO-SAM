@@ -34,6 +34,7 @@ lio_sam:
   lidarMaxRange: 50.0                         # default: 1000.0, maximum lidar range to be used
 
   # IMU Settings
+  imuFrequency: 200
   imuAccNoise: 3.9939570888238808e-03
   imuGyrNoise: 1.5636343949698187e-03
   imuAccBiasN: 6.4356659353532566e-05
@@ -108,7 +109,7 @@ lio_sam:
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 25.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
   historyKeyframeSearchTimeDiff: 15.0           # seconds, key frame that is n seconds older will be considered for loop closure
-  historyKeyframeSearchNum: 6000                  # number of hostory key frames will be fused into a submap for loop closure
+  historyKeyframeSearchNum: 50                  # number of hostory key frames will be fused into a submap for loop closure
   historyKeyframeFitnessScore: 0.1              # icp threshold, the smaller the better alignment
 
   # Visualization
