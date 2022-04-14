@@ -1,6 +1,6 @@
 lio_sam:
   # Topics
-  pointCloudTopic: "/velodyne_points"          # Point cloud data
+  pointCloudTopic: "/colored_points"          # Point cloud data
   imuTopic: "/gpsimu_driver/imu_data"         # IMU data
 
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
@@ -44,7 +44,7 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
 
-  extrinsicTrans: [-0.681 0 -0.813]
+  extrinsicTrans: [-2.111 0 -1.075]
 
 
   # extrinsicRot: [0.9995714, 0.0254011, 0.0145491,
@@ -61,19 +61,19 @@ lio_sam:
   #               -0.0254011,  0.999663,    0.00540919,
   #               -0.014549,  -0.00578004,  0.999877]
 
-  extrinsicRot: [0.9995500,  0.0299955,  0.0000000,
-                -0.0299955,  0.9995500,  0.0000000,
-                0.0000000,  0.0000000,  1.0000000 ]
-  extrinsicRPY: [0.9995500,  0.0299955,  0.0000000,
-                -0.0299955,  0.9995500,  0.0000000,
-                0.0000000,  0.0000000,  1.0000000 ]
+  # extrinsicRot: [0.9995500,  0.0299955,  0.0000000,
+  #               -0.0299955,  0.9995500,  0.0000000,
+  #               0.0000000,  0.0000000,  1.0000000 ]
+  # extrinsicRPY: [0.9995500,  0.0299955,  0.0000000,
+  #               -0.0299955,  0.9995500,  0.0000000,
+  #               0.0000000,  0.0000000,  1.0000000 ]
 
-  # extrinsicRot: [1.0, 0.0, 0.0,
-                #  0.0, 1.0, 0.0,
-                #  0.0, 0.0, 1.0]
-  # extrinsicRPY: [1.0, 0.0, 0.0,
-                #  0.0, 1.0, 0.0,
-                #  0.0, 0.0, 1.0]
+  extrinsicRot: [1.0, 0.0, 0.0,
+                 0.0, 1.0, 0.0,
+                 0.0, 0.0, 1.0]
+  extrinsicRPY: [1.0, 0.0, 0.0,
+                 0.0, 1.0, 0.0,
+                 0.0, 0.0, 1.0]
                 
 
 
@@ -81,8 +81,8 @@ lio_sam:
   # LOAM feature threshold
   edgeThreshold: 1.0
   surfThreshold: 0.1
-  edgeFeatureMinValidNum: 10
-  surfFeatureMinValidNum: 100
+  edgeFeatureMinValidNum: 5
+  surfFeatureMinValidNum: 10
 
   # voxel filter paprams
   odometrySurfLeafSize: 0.4                     # default: 0.4 - outdoor, 0.2 - indoor

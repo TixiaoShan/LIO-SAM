@@ -225,6 +225,7 @@ public:
         }
         else if (sensor == SensorType::OUSTER)
         {
+            std::cerr << "Should not end up in OUSTER sensor type!" << std::endl;
             // Convert to Velodyne format
             pcl::moveFromROSMsg(currentCloudMsg, *tmpOusterCloudIn);
             laserCloudIn->points.resize(tmpOusterCloudIn->size());
@@ -550,6 +551,7 @@ public:
             thisPoint.y = laserCloudIn->points[i].y;
             thisPoint.z = laserCloudIn->points[i].z;
             thisPoint.intensity = laserCloudIn->points[i].intensity;
+            thisPoint.time = laserCloudIn->points[i].time;
             thisPoint.rgb = laserCloudIn->points[i].rgb;
 
             float range = pointDistance(thisPoint);
