@@ -531,17 +531,14 @@ public:
         newPoint.z = transBt(2,0) * point->x + transBt(2,1) * point->y + transBt(2,2) * point->z + transBt(2,3);
         newPoint.intensity = point->intensity;
         newPoint.rgb = point->rgb;
+        newPoint.ring = point->ring;
+        newPoint.time = point->time;
 
         return newPoint;
     }
 
     void projectPointCloud()
     {
-        //Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-        //transform.rotate (Eigen::AngleAxisf (0.26, Eigen::Vector3f::UnitY()));
-        //transform.translation() << 2.151, 0.224, 1.073;
-        //pcl::transformPointCloud (*laserCloudIn, *laserCloudIn, transform);
-
         int cloudSize = laserCloudIn->points.size();
         // range image projection
         for (int i = 0; i < cloudSize; ++i)
@@ -553,6 +550,7 @@ public:
             thisPoint.intensity = laserCloudIn->points[i].intensity;
             thisPoint.time = laserCloudIn->points[i].time;
             thisPoint.rgb = laserCloudIn->points[i].rgb;
+            thisPoint.ring = laserCloudIn->points[i].ring;
 
             float range = pointDistance(thisPoint);
             if (range < lidarMinRange || range > lidarMaxRange)
