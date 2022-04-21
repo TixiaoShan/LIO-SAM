@@ -234,6 +234,7 @@ public:
 
     void laserCloudInfoHandler(const lio_sam::cloud_infoConstPtr& msgIn)
     {
+
         // extract time stamp
         timeLaserInfoStamp = msgIn->header.stamp;
         timeLaserInfoCur = msgIn->header.stamp.toSec();
@@ -489,11 +490,18 @@ public:
 
         for (int i = 0; i < (int)pointSearchIndGlobalMap.size(); ++i)
             globalMapKeyPoses->push_back(cloudKeyPoses3D->points[pointSearchIndGlobalMap[i]]);
-        // downsample near selected key frames
-        pcl::VoxelGrid<PointType> downSizeFilterGlobalMapKeyPoses; // for global map visualization
-        downSizeFilterGlobalMapKeyPoses.setLeafSize(globalMapVisualizationPoseDensity, globalMapVisualizationPoseDensity, globalMapVisualizationPoseDensity); // for global map visualization
-        downSizeFilterGlobalMapKeyPoses.setInputCloud(globalMapKeyPoses);
-        downSizeFilterGlobalMapKeyPoses.filter(*globalMapKeyPosesDS);
+        
+        if(useDownSampling) {
+            // downsample near selected key frames
+            pcl::VoxelGrid<PointType> downSizeFilterGlobalMapKeyPoses; // for global map visualization
+            downSizeFilterGlobalMapKeyPoses.setLeafSize(globalMapVisualizationPoseDensity, globalMapVisualizationPoseDensity, globalMapVisualizationPoseDensity); // for global map visualization
+            downSizeFilterGlobalMapKeyPoses.setInputCloud(globalMapKeyPoses);
+            downSizeFilterGlobalMapKeyPoses.filter(*globalMapKeyPosesDS);
+        }
+        else {
+            pcl::copyPointCloud(*globalMapKeyPoses, *globalMapKeyPosesDS);
+        }
+
         for(auto& pt : globalMapKeyPosesDS->points)
         {
             kdtreeGlobalMap->nearestKSearch(pt, 1, pointSearchIndGlobalMap, pointSearchSqDisGlobalMap);
@@ -508,12 +516,18 @@ public:
             *globalMapKeyFrames += *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],  &cloudKeyPoses6D->points[thisKeyInd]);
             *globalMapKeyFrames += *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
         }
-        // downsample visualized points
-        pcl::VoxelGrid<PointType> downSizeFilterGlobalMapKeyFrames; // for global map visualization
-        downSizeFilterGlobalMapKeyFrames.setLeafSize(globalMapVisualizationLeafSize, globalMapVisualizationLeafSize, globalMapVisualizationLeafSize); // for global map visualization
-        downSizeFilterGlobalMapKeyFrames.setInputCloud(globalMapKeyFrames);
-        downSizeFilterGlobalMapKeyFrames.filter(*globalMapKeyFramesDS);
-        publishCloud(&pubLaserCloudSurround, globalMapKeyFramesDS, timeLaserInfoStamp, odometryFrame);
+
+        if(useDownSampling) {
+            // downsample visualized points
+            pcl::VoxelGrid<PointType> downSizeFilterGlobalMapKeyFrames; // for global map visualization
+            downSizeFilterGlobalMapKeyFrames.setLeafSize(globalMapVisualizationLeafSize, globalMapVisualizationLeafSize, globalMapVisualizationLeafSize); // for global map visualization
+            downSizeFilterGlobalMapKeyFrames.setInputCloud(globalMapKeyFrames);
+            downSizeFilterGlobalMapKeyFrames.filter(*globalMapKeyFramesDS);
+            publishCloud(&pubLaserCloudSurround, globalMapKeyFramesDS, timeLaserInfoStamp, odometryFrame);
+        }
+        else {
+            publishCloud(&pubLaserCloudSurround, globalMapKeyFrames, timeLaserInfoStamp, odometryFrame);
+        }
     }
 
 
@@ -556,8 +570,10 @@ public:
     void performLoopClosure()
     {
         if (cloudKeyPoses3D->points.empty() == true)
+        {
+            // std::cout << "cloudKeyPoses3D->points.empty()" << std::endl;
             return;
-
+        }
         mtx.lock();
         *copy_cloudKeyPoses3D = *cloudKeyPoses3D;
         *copy_cloudKeyPoses6D = *cloudKeyPoses6D;
@@ -567,17 +583,23 @@ public:
         int loopKeyCur;
         int loopKeyPre;
         if (detectLoopClosureExternal(&loopKeyCur, &loopKeyPre) == false)
+        {
             if (detectLoopClosureDistance(&loopKeyCur, &loopKeyPre) == false)
+            {
+                // std::cout << "not in use my ass" << std::endl;
                 return;
-
+            }
+        }
         // extract cloud
         pcl::PointCloud<PointType>::Ptr cureKeyframeCloud(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr prevKeyframeCloud(new pcl::PointCloud<PointType>());
         {
             loopFindNearKeyframes(cureKeyframeCloud, loopKeyCur, 0);
             loopFindNearKeyframes(prevKeyframeCloud, loopKeyPre, historyKeyframeSearchNum);
-            if (cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000)
+            if (cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000){
+                // std::cout << "cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000" << std::endl;
                 return;
+            }
             if (pubHistoryKeyFrames.getNumSubscribers() != 0)
                 publishCloud(&pubHistoryKeyFrames, prevKeyframeCloud, timeLaserInfoStamp, odometryFrame);
         }
@@ -596,8 +618,10 @@ public:
         pcl::PointCloud<PointType>::Ptr unused_result(new pcl::PointCloud<PointType>());
         icp.align(*unused_result);
 
-        if (icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore)
+        if (icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore) {
+            // std::cout << "icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore" << std::endl;
             return;
+        }
 
         // publish corrected cloud
         if (pubIcpKeyFrames.getNumSubscribers() != 0)
@@ -615,6 +639,8 @@ public:
         Eigen::Affine3f tWrong = pclPointToAffine3f(copy_cloudKeyPoses6D->points[loopKeyCur]);
         // transform from world origin to corrected pose
         Eigen::Affine3f tCorrect = correctionLidarFrame * tWrong;// pre-multiplying -> successive rotation about a fixed frame
+        
+        
         pcl::getTranslationAndEulerAngles (tCorrect, x, y, z, roll, pitch, yaw);
         gtsam::Pose3 poseFrom = Pose3(Rot3::RzRyRx(roll, pitch, yaw), Point3(x, y, z));
         gtsam::Pose3 poseTo = pclPointTogtsamPose3(copy_cloudKeyPoses6D->points[loopKeyPre]);
@@ -740,11 +766,14 @@ public:
         if (nearKeyframes->empty())
             return;
 
-        // downsample near keyframes
-        pcl::PointCloud<PointType>::Ptr cloud_temp(new pcl::PointCloud<PointType>());
-        downSizeFilterICP.setInputCloud(nearKeyframes);
-        downSizeFilterICP.filter(*cloud_temp);
-        *nearKeyframes = *cloud_temp;
+        if(useDownSampling) {
+            // downsample near keyframes
+            pcl::PointCloud<PointType>::Ptr cloud_temp(new pcl::PointCloud<PointType>());
+            downSizeFilterICP.setInputCloud(nearKeyframes);
+            downSizeFilterICP.filter(*cloud_temp);
+            *nearKeyframes = *cloud_temp;
+        }
+        
     }
 
     void visualizeLoopClosure()
@@ -902,8 +931,14 @@ public:
             surroundingKeyPoses->push_back(cloudKeyPoses3D->points[id]);
         }
 
-        downSizeFilterSurroundingKeyPoses.setInputCloud(surroundingKeyPoses);
-        downSizeFilterSurroundingKeyPoses.filter(*surroundingKeyPosesDS);
+        if(useDownSampling) {
+            downSizeFilterSurroundingKeyPoses.setInputCloud(surroundingKeyPoses);
+            downSizeFilterSurroundingKeyPoses.filter(*surroundingKeyPosesDS);
+        }
+        else {
+            pcl::copyPointCloud(*surroundingKeyPoses, *surroundingKeyPosesDS);
+        }
+
         for(auto& pt : surroundingKeyPosesDS->points)
         {
             kdtreeSurroundingKeyPoses->nearestKSearch(pt, 1, pointSearchInd, pointSearchSqDis);
@@ -950,13 +985,19 @@ public:
             
         }
 
-        // Downsample the surrounding corner key frames (or map)
-        downSizeFilterCorner.setInputCloud(laserCloudCornerFromMap);
-        downSizeFilterCorner.filter(*laserCloudCornerFromMapDS);
+        if(useDownSampling) {
+            // Downsample the surrounding corner key frames (or map)
+            downSizeFilterCorner.setInputCloud(laserCloudCornerFromMap);
+            downSizeFilterCorner.filter(*laserCloudCornerFromMapDS);
+            // Downsample the surrounding surf key frames (or map)
+            downSizeFilterSurf.setInputCloud(laserCloudSurfFromMap);
+            downSizeFilterSurf.filter(*laserCloudSurfFromMapDS);
+        }
+        else {
+            pcl::copyPointCloud(*laserCloudCornerFromMap, *laserCloudCornerFromMapDS);
+            pcl::copyPointCloud(*laserCloudSurfFromMap, *laserCloudSurfFromMapDS);
+        }
         laserCloudCornerFromMapDSNum = laserCloudCornerFromMapDS->size();
-        // Downsample the surrounding surf key frames (or map)
-        downSizeFilterSurf.setInputCloud(laserCloudSurfFromMap);
-        downSizeFilterSurf.filter(*laserCloudSurfFromMapDS);
         laserCloudSurfFromMapDSNum = laserCloudSurfFromMapDS->size();
 
         // clear map cache if too large
@@ -981,15 +1022,23 @@ public:
 
     void downsampleCurrentScan()
     {
-        // Downsample cloud from current scan
         laserCloudCornerLastDS->clear();
-        downSizeFilterCorner.setInputCloud(laserCloudCornerLast);
-        downSizeFilterCorner.filter(*laserCloudCornerLastDS);
-        laserCloudCornerLastDSNum = laserCloudCornerLastDS->size();
-
         laserCloudSurfLastDS->clear();
-        downSizeFilterSurf.setInputCloud(laserCloudSurfLast);
-        downSizeFilterSurf.filter(*laserCloudSurfLastDS);
+
+        if(useDownSampling) {
+            // Downsample cloud from current scan
+            downSizeFilterCorner.setInputCloud(laserCloudCornerLast);
+            downSizeFilterCorner.filter(*laserCloudCornerLastDS);
+
+            downSizeFilterSurf.setInputCloud(laserCloudSurfLast);
+            downSizeFilterSurf.filter(*laserCloudSurfLastDS);
+        }
+        else {
+            pcl::copyPointCloud(*laserCloudCornerLast, *laserCloudCornerLastDS);
+            pcl::copyPointCloud(*laserCloudSurfLast, *laserCloudSurfLastDS);
+        }
+
+        laserCloudCornerLastDSNum = laserCloudCornerLastDS->size();
         laserCloudSurfLastDSNum = laserCloudSurfLastDS->size();
     }
 
@@ -1478,7 +1527,7 @@ public:
                 curGPSPoint.x = gps_x;
                 curGPSPoint.y = gps_y;
                 curGPSPoint.z = gps_z;
-                if (pointDistance(curGPSPoint, lastGPSPoint) < 5.0)
+                if (pointDistance(curGPSPoint, lastGPSPoint) < gpsDistThreshold)
                     continue;
                 else
                     lastGPSPoint = curGPSPoint;

@@ -4,7 +4,9 @@ lio_sam:
   imuTopic: "/gpsimu_driver/imu_data"         # IMU data
 
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
-  gpsTopic: "odometry/gps"                   # GPS odometry topic from navsat, see module_navsat.launch file
+  gpsTopic: "odometry/gps"                    # GPS odometry topic from navsat, see module_navsat.launch file
+
+  useDownSampling: true                      # Set to false to disable all downsampling of scans
 
   # Frames
   lidarFrame: "velodyne"
@@ -15,8 +17,9 @@ lio_sam:
   # GPS Settings
   useImuHeadingInitialization: true           # if using GPS data, set to "true"
   useGpsElevation: true                       # if GPS elevation is bad, set to "false"
+  gpsDistThreshold: 0.1                       # Distance threshold [m] (between two gps measurements) deciding if the new GPS position should be included in the gtsam graph
   gpsCovThreshold: 1.0                        # If GPS noise is greater than this threshold, discard
-  poseCovThreshold: 1.0                       # If Pose is further away from GPS than this threshold, correct
+  poseCovThreshold: 0.5                       # If Pose is further away from GPS than this threshold, correct
   
   # Export settings
   savePCD: false                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
@@ -28,7 +31,7 @@ lio_sam:
   Horizon_SCAN: 1800                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048)
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
   lidarMinRange: 2.5                          # default: 1.0, minimum lidar range to be used
-  lidarMaxRange: 1000.0                       # default: 1000.0, maximum lidar range to be used
+  lidarMaxRange: 50.0                         # default: 1000.0, maximum lidar range to be used
 
   # IMU Settings
   imuAccNoise: 3.9939570888238808e-03
@@ -36,28 +39,34 @@ lio_sam:
   imuAccBiasN: 6.4356659353532566e-05
   imuGyrBiasN: 3.5640318696367613e-05
   imuGravity: 9.81
-  #imuGravity: 0.0
-  imuRPYWeight: 0.01
+  imuRPYWeight: 0.1
 
   # Extrinsics (lidar -> IMU)
 
-  extrinsicTrans: [-2.151 -0.224 -1.073]
-  #extrinsicTrans: [0 0 0]
-  
-  #extrinsicRot: [0.966, 0, -0.257,
-  #               0, 1, 0,
-  #               0.257, 0, 0.966]
+  extrinsicTrans: [-0.681, 0.0, -0.813]
+  # extrinsicTrans: [0.0, 0.0, 0.0]
 
-  extrinsicRot: [1, 0, 0,
-                 0, 1, 0,
-                 0, 0, 1]
-  extrinsicRPY: [1, 0, 0,
-                0, 1, 0,
-                0, 0, 1]
-  #extrinsicRPY: [0.966, 0, -0.257,
-  #               0, 1, 0,
-  #               0.257, 0, 0.966]
+  extrinsicRot: [0.999571,   0.0253193,  0.014691,
+                -0.0254011,   0.999663,  0.00540919,
+                -0.014549,   -0.00578004,  0.999877]
+              
+  extrinsicRPY: [0.999571,   0.0253193,  0.014691,
+                -0.0254011,   0.999663,  0.00540919,
+                -0.014549,   -0.00578004,  0.999877]
 
+  # extrinsicRot: [0.9995714,  0.0254011,  0.0145491,
+  #               -0.0254874,  0.9996584,  0.0057800,
+  #               -0.0143973, -0.0061484,  0.9998775]
+  # extrinsicRPY: [0.9995714,  0.0254011,  0.0145491,
+  #               -0.0254874,  0.9996584,  0.0057800,
+  #               -0.0143973, -0.0061484,  0.9998775]
+  # extrinsicRot: [1.0,   0.0,  0.0,
+  #               0.0,   1.0,  0.0,
+  #               0.0,   0.0,  1.0] 
+
+  # extrinsicRPY: [1.0,   0.0,  0.0,
+  #               0.0,   1.0,  0.0,
+  #               0.0,   0.0,  1.0]                
 
   # LOAM feature threshold
   edgeThreshold: 1.0
@@ -76,20 +85,20 @@ lio_sam:
 
   # CPU Params
   numberOfCores: 4                              # number of cores for mapping optimization
-  mappingProcessInterval: 0.15                  # seconds, regulate mapping frequency
+  mappingProcessInterval: 0.10                  # seconds, regulate mapping frequency
 
   # Surrounding map
   surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
   surroundingkeyframeAddingAngleThreshold: 0.2  # radians, regulate keyframe adding threshold
   surroundingKeyframeDensity: 2.0               # meters, downsample surrounding keyframe poses   
-  surroundingKeyframeSearchRadius: 50.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
+  surroundingKeyframeSearchRadius: 35.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
 
   # Loop closure
   loopClosureEnableFlag: true
   loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
-  historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
-  historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be considered for loop closure
+  historyKeyframeSearchRadius: 25.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
+  historyKeyframeSearchTimeDiff: 15.0           # seconds, key frame that is n seconds OLDER will be considered for loop closure
   historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a submap for loop closure
   historyKeyframeFitnessScore: 0.2              # icp threshold, the smaller the better alignment
 
@@ -106,7 +115,7 @@ navsat:
   frequency: 50
   wait_for_datum: false
   delay: 0.0
-  magnetic_declination_radians: 0
+  magnetic_declination_radians: 0.08
   yaw_offset: 0
   zero_altitude: false
   broadcast_utm_transform: true
@@ -127,13 +136,13 @@ ekf_gps:
   # -------------------------------------
   # External IMU:
   # -------------------------------------
-  imu0: gpsimu_driver/imu_data
+  imu0: /gpsimu_driver/imu_data
   #imu0: imu_correct
   # make sure the input is aligned with ROS REP105. "imu_correct" is manually transformed by myself. EKF can also transform the data using tf between your imu and base_link
   imu0_config: [false, false, false,
                 true,  true,  true,
                 false, false, false,
-                false, false, true,
+                true, true, true,
                 true,  true,  true]           
   imu0_differential: false
   imu0_queue_size: 50 
@@ -141,19 +150,19 @@ ekf_gps:
   # -------------------------------------
   # Odometry (From Navsat):
   # -------------------------------------
-  odom0: odometry/gps
+  odom0: /odometry/gps
   odom0_config: [true,  true,  true,
                  false, false, false,
                  false, false, false,
                  false, false, false,
                  false, false, false]
   odom0_differential: false
-  odom0_queue_size: 10
+  odom0_queue_size: 50
 
   #                            x     y     z     r     p     y   x_dot  y_dot  z_dot  r_dot p_dot y_dot x_ddot y_ddot z_ddot
-  process_noise_covariance: [  1.0,  0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
-                               0,    1.0,  0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
-                               0,    0,    10.0, 0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
+  process_noise_covariance: [  0.05,  0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
+                               0,    0.05,  0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
+                               0,    0,    0.2,  0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0.03, 0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0.03, 0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0,    0.1,  0,     0,     0,     0,    0,    0,    0,    0,      0,
@@ -162,7 +171,7 @@ ekf_gps:
                                0,    0,    0,    0,    0,    0,    0,     0,     0.04,  0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0,    0,    0,     0,     0,     0.01, 0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0.01, 0,    0,    0,      0,
-                               0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0.5,  0,    0,      0,
+                               0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0.01, 0,    0,      0,
                                0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0.01, 0,      0,
                                0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0.01,   0,
                                0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0.015]
