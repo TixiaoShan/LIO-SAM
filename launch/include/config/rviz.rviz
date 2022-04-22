@@ -36,7 +36,7 @@ Visualization Manager:
     - Class: rviz/Group
       Displays:
         - Class: rviz/TF
-          Enabled: false
+          Enabled: true
           Frame Timeout: 999
           Frames:
             All Enabled: false
@@ -47,7 +47,19 @@ Visualization Manager:
           Show Axes: true
           Show Names: true
           Tree:
-            {}
+            map:
+              odom:
+                base_link:
+                  OxTs:
+                    navsat_link:
+                      {}
+                  chassis_link:
+                    velodyne:
+                      {}
+                lidar_link:
+                  {}
+                utm:
+                  {}
           Update Interval: 0
           Value: false
         - Alpha: 1
@@ -124,7 +136,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Value: false
-          Enabled: true
+          Enabled: false
           Keep: 300
           Name: Odom GPS
           Position Tolerance: 0.10000000149011612
@@ -141,7 +153,7 @@ Visualization Manager:
             Value: Arrow
           Topic: /odometry/navsat
           Unreliable: false
-          Value: true
+          Value: false
         - Angle Tolerance: 0.10000000149011612
           Class: rviz/Odometry
           Covariance:
@@ -159,7 +171,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Value: false
-          Enabled: false
+          Enabled: true
           Keep: 300
           Name: Odom lidar
           Position Tolerance: 0.10000000149011612
@@ -239,7 +251,7 @@ Visualization Manager:
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
-      Enabled: true
+      Enabled: false
       Name: Point Cloud
     - Class: rviz/Group
       Displays:
@@ -470,11 +482,30 @@ Visualization Manager:
           Marker Topic: /lio_sam/mapping/loop_closure_constraints
           Name: Loop constraint
           Namespaces:
-            {}
+            loop_edges: true
+            loop_nodes: true
           Queue Size: 100
           Value: true
       Enabled: true
       Name: Mapping
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0

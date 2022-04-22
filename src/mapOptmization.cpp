@@ -554,8 +554,10 @@ public:
     void performLoopClosure()
     {
         if (cloudKeyPoses3D->points.empty() == true)
+        {
+            // std::cout << "cloudKeyPoses3D->points.empty()" << std::endl;
             return;
-
+        }
         mtx.lock();
         *copy_cloudKeyPoses3D = *cloudKeyPoses3D;
         *copy_cloudKeyPoses6D = *cloudKeyPoses6D;
@@ -565,17 +567,23 @@ public:
         int loopKeyCur;
         int loopKeyPre;
         if (detectLoopClosureExternal(&loopKeyCur, &loopKeyPre) == false)
+        {
             if (detectLoopClosureDistance(&loopKeyCur, &loopKeyPre) == false)
+            {
+                // std::cout << "not in use my ass" << std::endl;
                 return;
-
+            }
+        }
         // extract cloud
         pcl::PointCloud<PointType>::Ptr cureKeyframeCloud(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr prevKeyframeCloud(new pcl::PointCloud<PointType>());
         {
             loopFindNearKeyframes(cureKeyframeCloud, loopKeyCur, 0);
             loopFindNearKeyframes(prevKeyframeCloud, loopKeyPre, historyKeyframeSearchNum);
-            if (cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000)
+            if (cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000){
+                // std::cout << "cureKeyframeCloud->size() < 300 || prevKeyframeCloud->size() < 1000" << std::endl;
                 return;
+            }
             if (pubHistoryKeyFrames.getNumSubscribers() != 0)
                 publishCloud(pubHistoryKeyFrames, prevKeyframeCloud, timeLaserInfoStamp, odometryFrame);
         }
@@ -594,8 +602,10 @@ public:
         pcl::PointCloud<PointType>::Ptr unused_result(new pcl::PointCloud<PointType>());
         icp.align(*unused_result);
 
-        if (icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore)
+        if (icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore) {
+            // std::cout << "icp.hasConverged() == false || icp.getFitnessScore() > historyKeyframeFitnessScore" << std::endl;
             return;
+        }
 
         // publish corrected cloud
         if (pubIcpKeyFrames.getNumSubscribers() != 0)
@@ -613,6 +623,8 @@ public:
         Eigen::Affine3f tWrong = pclPointToAffine3f(copy_cloudKeyPoses6D->points[loopKeyCur]);
         // transform from world origin to corrected pose
         Eigen::Affine3f tCorrect = correctionLidarFrame * tWrong;// pre-multiplying -> successive rotation about a fixed frame
+        
+        
         pcl::getTranslationAndEulerAngles (tCorrect, x, y, z, roll, pitch, yaw);
         gtsam::Pose3 poseFrom = Pose3(Rot3::RzRyRx(roll, pitch, yaw), Point3(x, y, z));
         gtsam::Pose3 poseTo = pclPointTogtsamPose3(copy_cloudKeyPoses6D->points[loopKeyPre]);
