@@ -17,11 +17,7 @@ lio_sam:
   # GPS Settings
   useImuHeadingInitialization: true           # if using GPS data, set to "true"
   useGpsElevation: true                       # if GPS elevation is bad, set to "false"
-<<<<<<< HEAD
   gpsDistThreshold: 0.25                       # Distance threshold [m] (between two gps measurements) deciding if the new GPS position should be included in the gtsam graph
-=======
-  gpsDistThreshold: 0.1                       # Distance threshold [m] (between two gps measurements) deciding if the new GPS position should be included in the gtsam graph
->>>>>>> master
   gpsCovThreshold: 1.0                        # If GPS noise is greater than this threshold, discard
   poseCovThreshold: 0.01                       # If Pose is further away from GPS than this threshold, correct
   
@@ -48,7 +44,6 @@ lio_sam:
 
   # Extrinsics (lidar -> IMU)
 
-<<<<<<< HEAD
   extrinsicTrans: [-2.111 0 -1.075]
 
 
@@ -82,32 +77,6 @@ lio_sam:
                 
 
 
-=======
-  extrinsicTrans: [-0.681, 0.0, -0.813]
-  # extrinsicTrans: [0.0, 0.0, 0.0]
-
-  extrinsicRot: [0.999571,   0.0253193,  0.014691,
-                -0.0254011,   0.999663,  0.00540919,
-                -0.014549,   -0.00578004,  0.999877]
-              
-  extrinsicRPY: [0.999571,   0.0253193,  0.014691,
-                -0.0254011,   0.999663,  0.00540919,
-                -0.014549,   -0.00578004,  0.999877]
-
-  # extrinsicRot: [0.9995714,  0.0254011,  0.0145491,
-  #               -0.0254874,  0.9996584,  0.0057800,
-  #               -0.0143973, -0.0061484,  0.9998775]
-  # extrinsicRPY: [0.9995714,  0.0254011,  0.0145491,
-  #               -0.0254874,  0.9996584,  0.0057800,
-  #               -0.0143973, -0.0061484,  0.9998775]
-  # extrinsicRot: [1.0,   0.0,  0.0,
-  #               0.0,   1.0,  0.0,
-  #               0.0,   0.0,  1.0] 
-
-  # extrinsicRPY: [1.0,   0.0,  0.0,
-  #               0.0,   1.0,  0.0,
-  #               0.0,   0.0,  1.0]                
->>>>>>> master
 
   # LOAM feature threshold
   edgeThreshold: 1.0
@@ -139,15 +108,9 @@ lio_sam:
   loopClosureFrequency: 2.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
   historyKeyframeSearchRadius: 25.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
-<<<<<<< HEAD
   historyKeyframeSearchTimeDiff: 15.0           # seconds, key frame that is n seconds older will be considered for loop closure
   historyKeyframeSearchNum: 50                  # number of hostory key frames will be fused into a submap for loop closure
   historyKeyframeFitnessScore: 0.1              # icp threshold, the smaller the better alignment
-=======
-  historyKeyframeSearchTimeDiff: 15.0           # seconds, key frame that is n seconds OLDER will be considered for loop closure
-  historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a submap for loop closure
-  historyKeyframeFitnessScore: 0.2              # icp threshold, the smaller the better alignment
->>>>>>> master
 
   # Visualization
   globalMapVisualizationSearchRadius: 1000.0    # meters, global map visualization radius
@@ -207,11 +170,7 @@ ekf_gps:
   #                            x     y     z     r     p     y   x_dot  y_dot  z_dot  r_dot p_dot y_dot x_ddot y_ddot z_ddot
   process_noise_covariance: [  0.05,  0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0.05,  0,    0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
-<<<<<<< HEAD
                                0,    0,    0.1,  0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
-=======
-                               0,    0,    0.2,  0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
->>>>>>> master
                                0,    0,    0,    0.03, 0,    0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0.03, 0,    0,     0,     0,     0,    0,    0,    0,    0,      0,
                                0,    0,    0,    0,    0,    0.1,  0,     0,     0,     0,    0,    0,    0,    0,      0,
