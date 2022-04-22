@@ -6,7 +6,7 @@ lio_sam:
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
   gpsTopic: "odometry/navsat"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
-  useDownSampling: true                      # Set to false to disable all downsampling of scans
+  useDownSampling: false                      # Set to false to disable all downsampling of scans
 
   # Frames
   lidarFrame: "velodyne"
@@ -17,9 +17,9 @@ lio_sam:
   # GPS Settings
   useImuHeadingInitialization: true           # if using GPS data, set to "true"
   useGpsElevation: true                       # if GPS elevation is bad, set to "false"
-  gpsDistThreshold: 0.5                       # Distance threshold [m] (between two gps measurements) deciding if the new GPS position should be included in the gtsam graph
+  gpsDistThreshold: 0.25                       # Distance threshold [m] (between two gps measurements) deciding if the new GPS position should be included in the gtsam graph
   gpsCovThreshold: 1.0                        # If GPS noise is greater than this threshold, discard
-  poseCovThreshold: 0.5                       # If Pose is further away from GPS than this threshold, correct
+  poseCovThreshold: 0.01                       # If Pose is further away from GPS than this threshold, correct
   
   # Export settings
   savePCD: false                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
@@ -30,8 +30,8 @@ lio_sam:
   N_SCAN: 32                                  # number of lidar channel (i.e., 16, 32, 64, 128)
   Horizon_SCAN: 1800                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048)
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
-  lidarMinRange: 2.5                          # default: 1.0, minimum lidar range to be used
-  lidarMaxRange: 50.0                         # default: 1000.0, maximum lidar range to be used
+  lidarMinRange: 2.2                          # default: 1.0, minimum lidar range to be used
+  lidarMaxRange: 150.0                         # default: 1000.0, maximum lidar range to be used
 
   # IMU Settings
   imuFrequency: 200
@@ -81,13 +81,13 @@ lio_sam:
   # LOAM feature threshold
   edgeThreshold: 1.0
   surfThreshold: 0.1
-  edgeFeatureMinValidNum: 5
-  surfFeatureMinValidNum: 10
+  edgeFeatureMinValidNum: 25
+  surfFeatureMinValidNum: 100
 
   # voxel filter paprams
-  odometrySurfLeafSize: 0.4                     # default: 0.4 - outdoor, 0.2 - indoor
-  mappingCornerLeafSize: 0.2                    # default: 0.2 - outdoor, 0.1 - indoor
-  mappingSurfLeafSize: 0.4                      # default: 0.4 - outdoor, 0.2 - indoor
+  odometrySurfLeafSize: 0.2                     # default: 0.4 - outdoor, 0.2 - indoor
+  mappingCornerLeafSize: 0.1                    # default: 0.2 - outdoor, 0.1 - indoor
+  mappingSurfLeafSize: 0.2                      # default: 0.4 - outdoor, 0.2 - indoor
 
   # robot motion constraint (in case you are using a 2D robot)
   z_tollerance: 1000                            # meters
