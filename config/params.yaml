@@ -38,14 +38,14 @@ lio_sam:
   imuGravity: 9.80511
   imuRPYWeight: 0.01
 
-  # Extrinsics (lidar -> IMU)
+  # Extrinsics: T_lb (lidar -> imu)
   extrinsicTrans: [0.0, 0.0, 0.0]
   extrinsicRot: [-1, 0, 0,
                   0, 1, 0,
                   0, 0, -1]
-  extrinsicRPY: [0,  1, 0,
-                 -1, 0, 0,
-                  0, 0, 1]
+  extrinsicRPY: [0, -1, 0,
+                 1, 0, 0,
+                 0, 0, 1]
   # extrinsicRot: [1, 0, 0,
   #                 0, 1, 0,
   #                 0, 0, 1]
