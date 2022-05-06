@@ -16,6 +16,10 @@
 #include <gtsam/nonlinear/ISAM2.h>
 #include <gtsam_unstable/nonlinear/IncrementalFixedLagSmoother.h>
 
+#ifdef BACKWARD_HAS_BACKTRACE
+#include <backward.hpp>
+#endif
+
 using gtsam::symbol_shorthand::X; // Pose3 (x,y,z,r,p,y)
 using gtsam::symbol_shorthand::V; // Vel   (xdot,ydot,zdot)
 using gtsam::symbol_shorthand::B; // Bias  (ax,ay,az,gx,gy,gz)
@@ -544,6 +548,9 @@ public:
 int main(int argc, char** argv)
 {   
     rclcpp::init(argc, argv);
+#ifdef BACKWARD_HAS_BACKTRACE
+    backward::SignalHandling sh;
+#endif
 
     rclcpp::NodeOptions options;
     options.use_intra_process_comms(true);
