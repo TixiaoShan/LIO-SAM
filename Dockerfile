@@ -26,4 +26,6 @@ RUN mkdir -p ~/catkin_ws/src \
     && catkin_make
 
 RUN echo "source /opt/ros/kinetic/setup.bash" >> /root/.bashrc \
-    && echo "source catkin_ws/devel/setup.bash" >> /root/.bashrc
+    && echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
+
+WORKDIR /root/catkin_ws
