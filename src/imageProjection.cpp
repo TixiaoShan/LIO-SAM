@@ -87,6 +87,8 @@ private:
     double timeScanEnd;
     std_msgs::msg::Header cloudHeader;
 
+    vector<int> columnIdnCountVec;
+
 
 public:
     ImageProjection(const rclcpp::NodeOptions & options) :
@@ -228,7 +230,7 @@ public:
         // convert cloud
         currentCloudMsg = std::move(cloudQueue.front());
         cloudQueue.pop_front();
-        if (sensor == SensorType::VELODYNE)
+        if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
         {
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
         }
@@ -566,12 +568,21 @@ public:
             if (rowIdn % downsampleRate != 0)
                 continue;
 
-            float horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
+            int columnIdn = -1;
+            if (sensor == SensorType::VELODYNE || sensor == SensorType::OUSTER)
+            {
+                float horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
+                static float ang_res_x = 360.0/float(Horizon_SCAN);
+                columnIdn = -round((horizonAngle-90.0)/ang_res_x) + Horizon_SCAN/2;
+                if (columnIdn >= Horizon_SCAN)
+                    columnIdn -= Horizon_SCAN;
+            }
+            else if (sensor == SensorType::LIVOX)
+            {
+                columnIdn = columnIdnCountVec[rowIdn];
+                columnIdnCountVec[rowIdn] += 1;
+            }
 
-            static float ang_res_x = 360.0/float(Horizon_SCAN);
-            int columnIdn = -round((horizonAngle-90.0)/ang_res_x) + Horizon_SCAN/2;
-            if (columnIdn >= Horizon_SCAN)
-                columnIdn -= Horizon_SCAN;
 
             if (columnIdn < 0 || columnIdn >= Horizon_SCAN)
                 continue;

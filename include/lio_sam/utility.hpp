@@ -18,26 +18,28 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <pcl/kdtree/kdtree_flann.h>  // pcl include kdtree_flann throws error if PCL_NO_PRECOMPILE
+                                      // is defined before
+#define PCL_NO_PRECOMPILE
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/impl/search.hpp>
 #include <pcl/range_image/range_image.h>
-#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/common/common.h>
 #include <pcl/common/transforms.h>
 #include <pcl/registration/icp.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/crop_box.h> 
+#include <pcl/filters/crop_box.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <tf2_eigen/tf2_eigen.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
- 
+#include <tf2_eigen/tf2_eigen.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 #include <vector>
 #include <cmath>
 #include <algorithm>
@@ -60,7 +62,7 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
-enum class SensorType { VELODYNE, OUSTER };
+enum class SensorType { VELODYNE, OUSTER, LIVOX };
 
 class ParamServer : public rclcpp::Node
 {
@@ -123,7 +125,7 @@ public:
     float mappingCornerLeafSize;
     float mappingSurfLeafSize ;
 
-    float z_tollerance; 
+    float z_tollerance;
     float rotation_tollerance;
 
     // CPU Params
@@ -131,11 +133,11 @@ public:
     double mappingProcessInterval;
 
     // Surrounding map
-    float surroundingkeyframeAddingDistThreshold; 
-    float surroundingkeyframeAddingAngleThreshold; 
+    float surroundingkeyframeAddingDistThreshold;
+    float surroundingkeyframeAddingAngleThreshold;
     float surroundingKeyframeDensity;
     float surroundingKeyframeSearchRadius;
-    
+
     // Loop closure
     bool  loopClosureEnableFlag;
     float loopClosureFrequency;
@@ -178,12 +180,34 @@ public:
         get_parameter("gpsCovThreshold", gpsCovThreshold);
         declare_parameter("poseCovThreshold", 25.0);
         get_parameter("poseCovThreshold", poseCovThreshold);
-        
+
         declare_parameter("savePCD", false);
         get_parameter("savePCD", savePCD);
-        
         declare_parameter("savePCDDirectory", "/Downloads/LOAM/");
         get_parameter("savePCDDirectory", savePCDDirectory);
+
+        std::string sensorStr;
+        declare_parameter("sensor", "ouster");
+        get_parameter("sensor", sensorStr);
+        if (sensorStr == "velodyne")
+        {
+            sensor = SensorType::VELODYNE;
+        }
+        else if (sensorStr == "ouster")
+        {
+            sensor = SensorType::OUSTER;
+        }
+        else if (sensorStr == "livox")
+        {
+            sensor = SensorType::LIVOX;
+        }
+        else
+        {
+            RCLCPP_ERROR_STREAM(
+                get_logger(),
+                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'livox'): " << sensorStr);
+            rclcpp::shutdown();
+        }
 
         declare_parameter("N_SCAN", 64);
         get_parameter("N_SCAN", N_SCAN);
@@ -247,7 +271,7 @@ public:
         get_parameter("z_tollerance", z_tollerance);
         declare_parameter("rotation_tollerance", 1000.0);
         get_parameter("rotation_tollerance", rotation_tollerance);
-        
+
         declare_parameter("numberOfCores", 4);
         get_parameter("numberOfCores", numberOfCores);
         declare_parameter("mappingProcessInterval", 0.15);
@@ -383,59 +407,59 @@ float pointDistance(PointType p1, PointType p2)
 }
 
 rmw_qos_profile_t qos_profile{
-  RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-  1,
-  RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
-  RMW_QOS_POLICY_DURABILITY_VOLATILE,
-  RMW_QOS_DEADLINE_DEFAULT,
-  RMW_QOS_LIFESPAN_DEFAULT,
-  RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
-  RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    1,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
 };
 
 auto qos = rclcpp::QoS(
     rclcpp::QoSInitialization(
-      qos_profile.history,
-      qos_profile.depth
+        qos_profile.history,
+        qos_profile.depth
     ),
     qos_profile);
 
 rmw_qos_profile_t qos_profile_imu{
-  RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-  2000,
-  RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
-  RMW_QOS_POLICY_DURABILITY_VOLATILE,
-  RMW_QOS_DEADLINE_DEFAULT,
-  RMW_QOS_LIFESPAN_DEFAULT,
-  RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
-  RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    2000,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
 };
 
 auto qos_imu = rclcpp::QoS(
     rclcpp::QoSInitialization(
-      qos_profile_imu.history,
-      qos_profile_imu.depth
+        qos_profile_imu.history,
+        qos_profile_imu.depth
     ),
     qos_profile_imu);
 
 rmw_qos_profile_t qos_profile_lidar{
-  RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-  5,
-  RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
-  RMW_QOS_POLICY_DURABILITY_VOLATILE,
-  RMW_QOS_DEADLINE_DEFAULT,
-  RMW_QOS_LIFESPAN_DEFAULT,
-  RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
-  RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    5,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
 };
 
 auto qos_lidar = rclcpp::QoS(
     rclcpp::QoSInitialization(
-      qos_profile_lidar.history,
-      qos_profile_lidar.depth
+        qos_profile_lidar.history,
+        qos_profile_lidar.depth
     ),
     qos_profile_lidar);
 
