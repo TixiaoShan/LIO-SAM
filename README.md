@@ -80,7 +80,7 @@ Tested with ROS2 versions foxy and galactic on Ubuntu 20.04 and humble on Ubuntu
 - [gtsam](https://gtsam.org/get_started) (Georgia Tech Smoothing and Mapping library)
   ```
   # Add GTSAM-PPA
-  sudo add-apt-repository ppa:borglab/gtsam-develop
+  sudo add-apt-repository ppa:borglab/gtsam-release-4.1
   sudo apt install libgtsam-dev libgtsam-unstable-dev
   ```
 
