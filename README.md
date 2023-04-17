@@ -267,6 +267,7 @@ Part of the code is adapted from [LeGO-LOAM](https://github.com/RobustFieldAuton
   - [liorf](https://github.com/YJZLuckyBoy/liorf) LIO-SAM with 6-axis IMU and more lidar support.
   - [Lidar-IMU calibration](https://github.com/chennuo0125-HIT/lidar_imu_calib)
   - [LIO-SAM with Scan Context](https://github.com/gisbi-kim/SC-LIO-SAM)
+  - [LIO-SAM with 6-axis IMU](https://github.com/JokerJohn/LIO_SAM_6AXIS)
 
 ## Acknowledgement
 
