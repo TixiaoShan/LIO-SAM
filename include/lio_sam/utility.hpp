@@ -74,6 +74,7 @@ public:
     string imuTopic;
     string odomTopic;
     string gpsTopic;
+    string gpsOdomTopic;
 
     //Frames
     string lidarFrame;
@@ -162,6 +163,8 @@ public:
         get_parameter("odomTopic", odomTopic);
         declare_parameter("gpsTopic", "lio_sam/odometry/gps");
         get_parameter("gpsTopic", gpsTopic);
+        declare_parameter("gpsOdomTopic", "lio_sam/gps_odom");
+        get_parameter("gpsOdomTopic", gpsOdomTopic);
 
         declare_parameter("lidarFrame", "laser_data_frame");
         get_parameter("lidarFrame", lidarFrame);
