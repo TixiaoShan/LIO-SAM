@@ -29,7 +29,7 @@ find_package(GTSAM REQUIRED)
 find_package(Eigen REQUIRED)
 
 include_directories(
-  include/lio_sam
+  include
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME} "msg/CloudInfo.msg" "srv/SaveMap.srv" DEPENDENCIES std_msgs sensor_msgs)
@@ -51,6 +51,10 @@ add_executable(${PROJECT_NAME}_mapOptimization src/mapOptmization.cpp)
 ament_target_dependencies(${PROJECT_NAME}_mapOptimization rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM)
 target_link_libraries(${PROJECT_NAME}_mapOptimization gtsam)
 rosidl_target_interfaces(${PROJECT_NAME}_mapOptimization ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+add_executable(${PROJECT_NAME}_simpleGpsOdom src/simpleGpsOdom.cpp)
+ament_target_dependencies(${PROJECT_NAME}_simpleGpsOdom rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL)
+rosidl_target_interfaces(${PROJECT_NAME}_simpleGpsOdom ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(
   DIRECTORY launch
@@ -79,6 +83,11 @@ install(
 
 install(
   TARGETS ${PROJECT_NAME}_mapOptimization
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS ${PROJECT_NAME}_simpleGpsOdom
   DESTINATION lib/${PROJECT_NAME}
 )
 
