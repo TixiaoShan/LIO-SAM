@@ -23,14 +23,14 @@ RUN apt-get update \
 
 SHELL ["/bin/bash", "-c"]
 
-RUN mkdir -p ~/colcon_ws/src \
-    && cd ~/colcon_ws/src \
+RUN mkdir -p ~/ros2_ws/src \
+    && cd ~/ros2_ws/src \
     && git clone --branch ros2 https://github.com/TixiaoShan/LIO-SAM.git \
     && cd .. \
     && source /opt/ros/humble/setup.bash \
     && colcon build
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc \
-    && echo "source /root/colcon_ws/install/setup.bash" >> /root/.bashrc
+    && echo "source /root/ros2_ws/install/setup.bash" >> /root/.bashrc
 
-WORKDIR /root/colcon_ws
+WORKDIR /root/ros2_ws
