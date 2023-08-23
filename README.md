@@ -97,6 +97,48 @@ Use the following commands to download and compile the package.
   colcon build
   ```
 
+## Using Docker
+
+Build image (based on ROS2 Humble):
+
+```
+docker build -t liosam-humble-jammy .
+```
+
+Once you have the image, you can start a container by using one of the following methods:
+
+1. `docker run`
+
+```
+docker run --init -it -d \
+  --name liosam-humble-jammy-container \
+  -v /etc/localtime:/etc/localtime:ro \
+  -v /etc/timezone:/etc/timezone:ro \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e DISPLAY=$DISPLAY \
+  --runtime=nvidia --gpus all \
+  liosam-humble-jammy \
+  bash
+```
+
+2. `docker compose`
+
+Start a docker compose container:
+
+```
+docker compose up -d
+```
+
+Stopping a docker compose container:
+```
+docker compose down
+```
+
+To enter into the running container use:
+
+```
+docker exec -it liosam-humble-jammy-container bash
+```
 ## Prepare lidar data
 
 The user needs to prepare the point cloud data in the correct format for cloud deskewing, which is mainly done in "imageProjection.cpp". The two requirements are:

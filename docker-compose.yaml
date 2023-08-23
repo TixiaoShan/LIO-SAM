@@ -1,0 +1,32 @@
+version: '3'
+services:
+  ddg-humble-container:
+    image: liosam-humble-jammy
+    container_name: liosam-humble-jammy-container
+    privileged: true
+    hostname: liosam-humble-jammy-container
+    restart: always
+    stdin_open: true
+    tty: true
+    network_mode: "host"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+      - 8.8.8.8
+    environment:
+      - "DISPLAY=$DISPLAY"
+      - "NVIDIA_VISIBLE_DEVICES=all"
+      - "NVIDIA_DRIVER_CAPABILITIES=all"
+      - "FASTRTPS_DEFAULT_PROFILES_FILE=/usr/local/share/middleware_profiles/rtps_udp_profile.xml"
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/dev/*:/dev/*"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
