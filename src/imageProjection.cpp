@@ -233,6 +233,14 @@ public:
         if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
         {
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);
+            // for(uint8_t i = 0; i < 16; i++)
+            // {
+            //     for(uint8_t j = 0; j < laserCloudIn->size() / 16; j++)
+            //     {
+            //         auto &dst = laserCloudIn->points[i];
+            //         dst.ring = i < 8 ? i : 15 - (i - 8);
+            //     }
+            // }  
         }
         else if (sensor == SensorType::OUSTER)
         {
@@ -262,6 +270,10 @@ public:
         cloudHeader = currentCloudMsg.header;
         timeScanCur = stamp2Sec(cloudHeader.stamp);
         timeScanEnd = timeScanCur + laserCloudIn->points.back().time;
+    
+        // remove Nan
+        vector<int> indices;
+        pcl::removeNaNFromPointCloud(*laserCloudIn, *laserCloudIn, indices);
 
         // check dense flag
         if (laserCloudIn->is_dense == false)
@@ -271,40 +283,41 @@ public:
         }
 
         // check ring channel
-        static int ringFlag = 0;
-        if (ringFlag == 0)
-        {
-            ringFlag = -1;
-            for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
-            {
-                if (currentCloudMsg.fields[i].name == "ring")
-                {
-                    ringFlag = 1;
-                    break;
-                }
-            }
-            if (ringFlag == -1)
-            {
-                RCLCPP_ERROR(get_logger(), "Point cloud ring channel not available, please configure your point cloud data!");
-                rclcpp::shutdown();
-            }
-        }
+        static int ringFlag = 1;
+        // if (ringFlag == 0)
+        // {
+        //     ringFlag = -1;
+        //     for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
+        //     {
+        //         if (currentCloudMsg.fields[i].name == "ring")
+        //         {
+        //             ringFlag = 1;
+        //             break;
+        //         }
+        //     }
+        //     if (ringFlag == -1)
+        //     {
+        //         RCLCPP_ERROR(get_logger(), "Point cloud ring channel not available, please configure your point cloud data!");
+        //         rclcpp::shutdown();
+        //     }
+        // }
 
         // check point time
-        if (deskewFlag == 0)
-        {
-            deskewFlag = -1;
-            for (auto &field : currentCloudMsg.fields)
-            {
-                if (field.name == "time" || field.name == "t")
-                {
-                    deskewFlag = 1;
-                    break;
-                }
-            }
-            if (deskewFlag == -1)
-                RCLCPP_WARN(get_logger(), "Point cloud timestamp not available, deskew function disabled, system will drift significantly!");
-        }
+        // if (deskewFlag == 0)
+        // {
+        //     deskewFlag = -1;
+        //     for (auto &field : currentCloudMsg.fields)
+        //     {
+        //         if (field.name == "time" || field.name == "t")
+        //         {
+        //             deskewFlag = 1;
+        //             break;
+        //         }
+        //     }
+        //     if (deskewFlag == -1)
+        //         RCLCPP_WARN(get_logger(), "Point cloud timestamp not available, deskew function disabled, system will drift significantly!");
+        // }
+        deskewFlag = 1;
 
         return true;
     }
@@ -561,7 +574,9 @@ public:
             if (range < lidarMinRange || range > lidarMaxRange)
                 continue;
 
-            int rowIdn = laserCloudIn->points[i].ring;
+            // int rowIdn = laserCloudIn->points[i].ring;
+            float verticalAngle = atan2(thisPoint.z, sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y)) * 180 / M_PI;                                                
+            int rowIdn = (verticalAngle + 15) / 2.0;                             
             if (rowIdn < 0 || rowIdn >= N_SCAN)
                 continue;
 
