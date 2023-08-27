@@ -2,6 +2,7 @@
 <package>
   <name>lio_sam</name>
   <version>1.0.0</version>
+  <version>1.0.0</version>
   <description>Lidar Odometry</description>
 
   <maintainer email="shant@mit.edu">Tixiao Shan</maintainer>
