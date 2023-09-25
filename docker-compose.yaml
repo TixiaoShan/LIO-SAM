@@ -1,6 +1,6 @@
 version: '3'
 services:
-  ddg-humble-container:
+  liosam-humble-jammy-container:
     image: liosam-humble-jammy
     container_name: liosam-humble-jammy-container
     privileged: true
