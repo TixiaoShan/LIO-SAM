@@ -74,6 +74,7 @@ private:
     pcl::PointCloud<PointType>::Ptr   fullCloud;
     pcl::PointCloud<PointType>::Ptr   extractedCloud;
 
+    int ringFlag = 0;
     int deskewFlag;
     cv::Mat rangeMat;
 
@@ -275,11 +276,9 @@ public:
         }
 
         // check ring channel
-        static int ringFlag = 0;
-
         // we will skip the ring check in case of velodyne - as we calculate the ring value downstream (line 572)
 
-        if (ringFlag == 0 && sensor != SensorType::VELODYNE)
+        if (ringFlag == 0)
         {
             ringFlag = -1;
             for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
@@ -292,8 +291,12 @@ public:
             }
             if (ringFlag == -1)
             {
-                RCLCPP_ERROR(get_logger(), "Point cloud ring channel not available, please configure your point cloud data!");
-                rclcpp::shutdown();
+                if (sensor == SensorType::VELODYNE) {
+                    ringFlag = 2;
+                } else {
+                    RCLCPP_ERROR(get_logger(), "Point cloud ring channel not available, please configure your point cloud data!");
+                    rclcpp::shutdown();
+                }
             }
         }
 
@@ -569,8 +572,8 @@ public:
                 continue;
 
             int rowIdn = laserCloudIn->points[i].ring;
-            // if sensor is a velodyne calculate rowIdn based on number of scans
-            if (sensor == SensorType::VELODYNE) { 
+            // if sensor is a velodyne (ringFlag = 2) calculate rowIdn based on number of scans
+            if (ringFlag == 2) { 
                 float verticalAngle =
                     atan2(thisPoint.z,
                         sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y)) *
