@@ -277,7 +277,6 @@ public:
 
         // check ring channel
         // we will skip the ring check in case of velodyne - as we calculate the ring value downstream (line 572)
-
         if (ringFlag == 0)
         {
             ringFlag = -1;
@@ -315,7 +314,6 @@ public:
             if (deskewFlag == -1)
                 RCLCPP_WARN(get_logger(), "Point cloud timestamp not available, deskew function disabled, system will drift significantly!");
         }
-        
         return true;
     }
 
