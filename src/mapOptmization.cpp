@@ -1,4 +1,4 @@
-#include "utility.hpp"
+#include "lio_sam/utility.hpp"
 #include "lio_sam/msg/cloud_info.hpp"
 #include "lio_sam/srv/save_map.hpp"
 #include <gtsam/geometry/Rot3.h>
@@ -170,7 +170,7 @@ public:
             "lio_sam/feature/cloud_info", qos,
             std::bind(&mapOptimization::laserCloudInfoHandler, this, std::placeholders::_1));
         subGPS = create_subscription<nav_msgs::msg::Odometry>(
-            gpsTopic, 200,
+            gpsOdomTopic, 200,
             std::bind(&mapOptimization::gpsHandler, this, std::placeholders::_1));
         subLoop = create_subscription<std_msgs::msg::Float64MultiArray>(
             "lio_loop/loop_closure_detection", qos,
