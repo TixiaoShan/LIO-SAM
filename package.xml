@@ -51,6 +51,7 @@
   <exec_depend>libpcl-all-dev</exec_depend>
   <exec_depend>gtsam</exec_depend>
   <exec_depend>eigen</exec_depend>
+  <exec_depend>xacro</exec_depend>
   
   <member_of_group>rosidl_interface_packages</member_of_group>
 
