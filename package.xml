@@ -28,10 +28,10 @@
   <build_depend>tf2_eigen</build_depend>
   <build_depend>tf2_ros</build_depend>
   <build_depend>tf2</build_depend>
-  <build_depend>OpenCV</build_depend>
-  <build_depend>PCL</build_depend>
-  <build_depend>GTSAM</build_depend>
-  <build_depend>Eigen</build_depend>
+  <build_depend>libopencv-dev</build_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_depend>gtsam</build_depend>
+  <build_depend>eigen</build_depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>rclcpp</exec_depend>
@@ -47,10 +47,10 @@
   <exec_depend>tf2_eigen</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>tf2</exec_depend>
-  <exec_depend>OpenCV</exec_depend>
-  <exec_depend>PCL</exec_depend>
-  <exec_depend>GTSAM</exec_depend>
-  <exec_depend>Eigen</exec_depend>
+  <exec_depend>libopencv-dev</exec_depend>
+  <exec_depend>libpcl-all-dev</exec_depend>
+  <exec_depend>gtsam</exec_depend>
+  <exec_depend>eigen</exec_depend>
   
   <member_of_group>rosidl_interface_packages</member_of_group>
 
