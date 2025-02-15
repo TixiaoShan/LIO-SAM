@@ -1,4 +1,4 @@
-#include "utility.hpp"
+#include "lio_sam/utility.hpp"
 #include "lio_sam/msg/cloud_info.hpp"
 
 struct smoothness_t{ 
