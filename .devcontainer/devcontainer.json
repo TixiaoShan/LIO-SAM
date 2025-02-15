@@ -1,0 +1,27 @@
+{
+    "name": "liosam-humble-jammy",
+    // "dockerComposeFile": [
+    //     "docker-compose.yml"
+    // ],
+    "dockerFile": "../Dockerfile",
+    "build": {
+        "args": {
+            "USE_RVIZ": "1"
+        }
+    },
+    "containerEnv": { 
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "ROS_DOMAIN_ID": "45"
+            },
+    "service": "liosam-humble-jammy-container",
+    "workspaceFolder": "/root/ros2_ws",
+    "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-iot.vscode-ros",
+        "ms-python.python"
+    ],
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "remoteUser": "root"
+}

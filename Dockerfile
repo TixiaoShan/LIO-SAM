@@ -1,4 +1,7 @@
-FROM osrf/ros:humble-desktop-full-jammy
+# FROM osrf/ros:humble-desktop-full-jammy
+
+ARG ROS_DISTRO=humble
+FROM ros:${ROS_DISTRO}-ros-base
 
 RUN apt-get update \
     && apt-get install -y curl \
@@ -20,6 +23,8 @@ RUN apt-get update \
     && apt-get update \
     && apt install -y libgtsam-dev libgtsam-unstable-dev \
     && rm -rf /var/lib/apt/lists/*
+
+RUN if [ "$USE_RVIZ" = "1" ] ; then echo "RVIZ ENABLED" && sudo apt install -y ros-${ROS_DISTRO}-rviz2 ros-${ROS_DISTRO}-rviz-imu-plugin ; else echo "RVIZ NOT ENABLED"; fi
 
 SHELL ["/bin/bash", "-c"]
 
