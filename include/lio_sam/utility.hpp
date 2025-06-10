@@ -152,6 +152,9 @@ public:
     float globalMapVisualizationPoseDensity;
     float globalMapVisualizationLeafSize;
 
+    // TF
+    bool publishOdomToLidarTF;
+
     ParamServer(std::string node_name, const rclcpp::NodeOptions & options) : Node(node_name, options)
     {
         declare_parameter("pointCloudTopic", "points");
@@ -307,6 +310,9 @@ public:
         get_parameter("globalMapVisualizationPoseDensity", globalMapVisualizationPoseDensity);
         declare_parameter("globalMapVisualizationLeafSize", 1.0);
         get_parameter("globalMapVisualizationLeafSize", globalMapVisualizationLeafSize);
+
+        declare_parameter("publishOdomToLidarTF", true);
+        get_parameter("publishOdomToLidarTF", publishOdomToLidarTF);
 
         usleep(100);
     }
