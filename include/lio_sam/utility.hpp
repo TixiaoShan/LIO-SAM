@@ -154,6 +154,7 @@ public:
 
     // TF
     bool publishOdomToLidarTF;
+    bool publishOdomToBaseTF;
 
     ParamServer(std::string node_name, const rclcpp::NodeOptions & options) : Node(node_name, options)
     {
@@ -313,6 +314,9 @@ public:
 
         declare_parameter("publishOdomToLidarTF", true);
         get_parameter("publishOdomToLidarTF", publishOdomToLidarTF);
+
+        declare_parameter("publishOdomToBaseTF", true);
+        get_parameter("publishOdomToBaseTF", publishOdomToBaseTF);
 
         usleep(100);
     }
