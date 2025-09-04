@@ -15,7 +15,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="base_link" />
     <child link="lidar_link" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
   </joint>
 
   <link name="imu_link"> </link>
@@ -24,12 +24,12 @@
     <child link="imu_link" />
     <origin xyz="0 0 0" rpy="0 0 0" />
   </joint>
-
-  <link name="laser_sensor_frame"> </link>
+  
+  <link name="unilidar_lidar"> </link>
   <joint name="laser_joint" type="fixed">
     <parent link="imu_link" />
-    <child link="laser_sensor_frame" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
+    <child link="unilidar_lidar" />
+    <origin xyz="-0.216  -0.220  0.0" rpy="0 0 0" />
   </joint>
 
   <link name="navsat_link"> </link>

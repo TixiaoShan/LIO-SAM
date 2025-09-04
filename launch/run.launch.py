@@ -16,8 +16,8 @@ def generate_launch_description():
     params_declare = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(
-            share_dir, 'config', 'params.yaml'),
-        description='FPath to the ROS2 parameters file to use.')
+            share_dir, 'config', 'params_l1.yaml'),
+        description='Path to the ROS2 parameters file to use.')
 
     print("urdf_file_name : {}".format(xacro_path))
 

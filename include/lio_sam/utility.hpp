@@ -98,7 +98,7 @@ public:
     int downsampleRate;
     float lidarMinRange;
     float lidarMaxRange;
-
+    float imu_rate;
     // IMU
     float imuAccNoise;
     float imuGyrNoise;
@@ -219,6 +219,8 @@ public:
         get_parameter("lidarMinRange", lidarMinRange);
         declare_parameter("lidarMaxRange", 1000.0);
         get_parameter("lidarMaxRange", lidarMaxRange);
+        declare_parameter("imu_rate", 100.0);
+        get_parameter("imu_rate", imu_rate);
 
         declare_parameter("imuAccNoise", 9e-4);
         get_parameter("imuAccNoise", imuAccNoise);
@@ -447,7 +449,7 @@ auto qos_imu = rclcpp::QoS(
 rmw_qos_profile_t qos_profile_lidar{
     RMW_QOS_POLICY_HISTORY_KEEP_LAST,
     5,
-    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_VOLATILE,
     RMW_QOS_DEADLINE_DEFAULT,
     RMW_QOS_LIFESPAN_DEFAULT,

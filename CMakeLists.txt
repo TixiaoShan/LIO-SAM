@@ -28,8 +28,9 @@ set(OpenCV_STATIC ON)
 find_package(OpenCV REQUIRED)
 find_package(PCL REQUIRED)
 find_package(GTSAM REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(message_filters REQUIRED)
 
 include_directories(
   include/lio_sam
@@ -49,8 +50,13 @@ ament_target_dependencies(${PROJECT_NAME}_imageProjection rclcpp rclpy std_msgs 
 target_link_libraries(${PROJECT_NAME}_imageProjection "${cpp_typesupport_target}") 
 
 add_executable(${PROJECT_NAME}_imuPreintegration src/imuPreintegration.cpp)
-ament_target_dependencies(${PROJECT_NAME}_imuPreintegration rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_conversions pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM Eigen)
+ament_target_dependencies(${PROJECT_NAME}_imuPreintegration rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_conversions pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM Eigen3)
 target_link_libraries(${PROJECT_NAME}_imuPreintegration gtsam "${cpp_typesupport_target}")
+
+add_executable(data_sync_node src/data_sync_node.cpp)
+ament_target_dependencies(data_sync_node rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_conversions pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM Eigen3 message_filters)
+target_link_libraries(data_sync_node gtsam "${cpp_typesupport_target}")
+
 
 add_executable(${PROJECT_NAME}_mapOptimization src/mapOptmization.cpp)
 ament_target_dependencies(${PROJECT_NAME}_mapOptimization rclcpp rclpy std_msgs sensor_msgs geometry_msgs nav_msgs pcl_conversions pcl_msgs visualization_msgs tf2 tf2_ros tf2_eigen tf2_sensor_msgs tf2_geometry_msgs OpenCV PCL GTSAM)
@@ -75,7 +81,10 @@ install(
   TARGETS ${PROJECT_NAME}_imageProjection
   DESTINATION lib/${PROJECT_NAME}
 )
-
+install(
+  TARGETS data_sync_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 install(
   TARGETS ${PROJECT_NAME}_imuPreintegration
   DESTINATION lib/${PROJECT_NAME}
