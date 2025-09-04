@@ -20,7 +20,7 @@ public:
     : ParamServer("data_synchronizer_node", options)
     {
         sub_lidar_.subscribe(this, "unilidar/cloud", qos_lidar.get_rmw_qos_profile());
-        sub_imu_.subscribe(this, "bno055/imu_raw", qos_imu.get_rmw_qos_profile());
+        sub_imu_.subscribe(this, "/SR1T1/bno055/imu_raw", qos_imu.get_rmw_qos_profile());
 
         sync_ = std::make_shared<message_filters::Synchronizer<LidarImuSyncPolicy>>(
             LidarImuSyncPolicy(200), sub_lidar_, sub_imu_);

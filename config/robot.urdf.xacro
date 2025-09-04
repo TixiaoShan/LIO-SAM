@@ -32,11 +32,4 @@
     <origin xyz="-0.216  -0.220  0.0" rpy="0 0 0" />
   </joint>
 
-  <link name="navsat_link"> </link>
-  <joint name="navsat_joint" type="fixed">
-    <parent link="chassis_link" />
-    <child link="navsat_link" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
-  </joint>
-
 </robot>

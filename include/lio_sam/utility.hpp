@@ -62,7 +62,7 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
-enum class SensorType { VELODYNE, OUSTER, LIVOX };
+enum class SensorType { VELODYNE=0, OUSTER, LIVOX, UNITREE };
 
 class ParamServer : public rclcpp::Node
 {
@@ -201,11 +201,15 @@ public:
         {
             sensor = SensorType::LIVOX;
         }
+        else if (sensorStr=="unitree")
+        {
+            sensor= SensorType::UNITREE;
+        }
         else
         {
             RCLCPP_ERROR_STREAM(
                 get_logger(),
-                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'livox'): " << sensorStr);
+                "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'livox' or 'unitree'): " << sensorStr);
             rclcpp::shutdown();
         }
 

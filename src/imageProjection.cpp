@@ -9,10 +9,29 @@ struct VelodynePointXYZIRT
     float time;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
+
 POINT_CLOUD_REGISTER_POINT_STRUCT (VelodynePointXYZIRT,
     (float, x, x) (float, y, y) (float, z, z) (float, intensity, intensity)
     (uint16_t, ring, ring) (float, time, time)
 )
+
+struct  UNITREEXYZIRT {
+    PCL_ADD_POINT4D
+    PCL_ADD_INTENSITY
+    uint16_t ring;
+    float time;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};EIGEN_ALIGN16;
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(UNITREEXYZIRT,
+                                    (float, x, x)
+                                    (float, y, y)
+                                    (float, z, z)
+                                    (float, intensity, intensity)
+                                    (uint16_t, ring, ring)
+                                    (float, time, time)
+                                    )
+
 
 struct OusterPointXYZIRT {
     PCL_ADD_POINT4D;
@@ -70,6 +89,7 @@ private:
     Eigen::Affine3f transStartInverse;
 
     pcl::PointCloud<PointXYZIRT>::Ptr laserCloudIn;
+    pcl::PointCloud<UNITREEXYZIRT>::Ptr unitreeLaserCloudIn;
     pcl::PointCloud<OusterPointXYZIRT>::Ptr tmpOusterCloudIn;
     pcl::PointCloud<PointType>::Ptr   fullCloud;
     pcl::PointCloud<PointType>::Ptr   extractedCloud;
@@ -136,6 +156,7 @@ public:
     void allocateMemory()
     {
         laserCloudIn.reset(new pcl::PointCloud<PointXYZIRT>());
+        unitreeLaserCloudIn.reset(new pcl::PointCloud<UNITREEXYZIRT>());
         tmpOusterCloudIn.reset(new pcl::PointCloud<OusterPointXYZIRT>());
         fullCloud.reset(new pcl::PointCloud<PointType>());
         extractedCloud.reset(new pcl::PointCloud<PointType>());
@@ -174,7 +195,7 @@ public:
 
     ~ImageProjection(){}
 
-    void imuHandler(const sensor_msgs::msg::Imu::SharedPtr imuMsg)
+    void imuHandler(const sensor_msgs::msg::Imu::SharedPtr imuMsg)//imu callback
     {
         sensor_msgs::msg::Imu thisImu = imuConverter(*imuMsg);
 
@@ -205,7 +226,7 @@ public:
         odomQueue.push_back(*odometryMsg);
     }
 
-    void cloudHandler(const sensor_msgs::msg::PointCloud2::SharedPtr laserCloudMsg)
+    void cloudHandler(const sensor_msgs::msg::PointCloud2::SharedPtr laserCloudMsg)//point cloud callback
     {
         if (!cachePointCloud(laserCloudMsg))
             return;
@@ -232,7 +253,7 @@ public:
         // convert cloud
         currentCloudMsg = std::move(cloudQueue.front());
         cloudQueue.pop_front();
-        if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX)
+        if (sensor == SensorType::VELODYNE || sensor == SensorType::LIVOX || sensor == SensorType::UNITREE)
         {
             pcl::moveFromROSMsg(currentCloudMsg, *laserCloudIn);  
         }
@@ -260,7 +281,7 @@ public:
             rclcpp::shutdown();
         }
 
-        // get timestamp
+        // get timestamp. Zaman damgası atanır. Nokta bulutundaki ilk noktanın zaman damgasıdır.
         cloudHeader = currentCloudMsg.header;
         timeScanCur = stamp2Sec(cloudHeader.stamp);
         timeScanEnd = timeScanCur + laserCloudIn->points.back().time;
@@ -278,7 +299,7 @@ public:
 
         // check ring channel
         // we will skip the ring check in case of velodyne - as we calculate the ring value downstream (line 572)
-        if (ringFlag == 0)
+        if (ringFlag == 0)// point cloud verisinde ring alanının varlığı kontrol ediliyor.
         {
             ringFlag = -1;
             for (int i = 0; i < (int)currentCloudMsg.fields.size(); ++i)
@@ -301,7 +322,7 @@ public:
         }
 
         // check point time
-        if (deskewFlag == 0)
+        if (deskewFlag == 0)// point cloud verisinin time alanın varlığı kontrol ediliyor.
         {
             deskewFlag = -1;
             for (auto &field : currentCloudMsg.fields)
@@ -321,15 +342,19 @@ public:
 
     bool deskewInfo()
     {
+        /*
+            LiDAR scan’inin zaman damgaları (timeScanCur ve timeScanEnd) ile IMU ve odometri verilerinin zaman aralığını eşleştirerek, 
+            hareket distorsiyonunu düzeltmek için gerekli bilgileri toplamak ve hazırlamak.
+        */
         std::lock_guard<std::mutex> lock1(imuLock);
         std::lock_guard<std::mutex> lock2(odoLock);
 
         // make sure IMU data available for the scan
-        if (imuQueue.empty() ||
-            stamp2Sec(imuQueue.front().header.stamp) > timeScanCur ||
-            stamp2Sec(imuQueue.back().header.stamp) < timeScanEnd)
+        if (imuQueue.empty() || stamp2Sec(imuQueue.front().header.stamp) > timeScanCur || stamp2Sec(imuQueue.back().header.stamp) < timeScanEnd)
         {
-            RCLCPP_INFO(get_logger(), "Waiting for IMU data ...");
+            // IMU verileri, LiDAR scan’inin zaman aralığını kapsamalıdır; aksi halde deskew işlemi başarısız olur.
+            RCLCPP_INFO(get_logger(), "Waiting for IMU data ...Zaman senkronizasyonu için IMU verisi bekleniyor ...");
+            RCLCPP_INFO(get_logger(), "Scan time: %.6f -- %.6f", timeScanCur, timeScanEnd);
             return false;
         }
 
@@ -349,6 +374,7 @@ public:
             if (stamp2Sec(imuQueue.front().header.stamp) < timeScanCur - 0.01)
                 imuQueue.pop_front();
             else
+                std::cout<<"too much imu data1"<<std::endl;
                 break;
         }
 
@@ -366,6 +392,7 @@ public:
             if (currentImuTime <= timeScanCur)
                 imuRPY2rosRPY(&thisImuMsg, &cloudInfo.imu_roll_init, &cloudInfo.imu_pitch_init, &cloudInfo.imu_yaw_init);
             if (currentImuTime > timeScanEnd + 0.01)
+                std::cout<<"too much imu data2"<<std::endl;
                 break;
 
             if (imuPointerCur == 0){
@@ -393,6 +420,7 @@ public:
         --imuPointerCur;
 
         if (imuPointerCur <= 0)
+            std::cout<<"Not enough IMU data for deskewing"<<std::endl;
             return;
 
         cloudInfo.imu_available = true;
@@ -400,6 +428,10 @@ public:
 
     void odomDeskewInfo()
     {
+        /*
+        Genel Amaç: LiDAR scan’inin başlangıç ve bitiş zamanlarına karşılık gelen odometri verilerini kullanarak,
+        hareket distorsiyonunu düzeltmek için gerekli bilgileri (initial_guess ve odomIncre gibi) hazırlamak.
+        */
         cloudInfo.odom_available = false;
 
         while (!odomQueue.empty())
@@ -407,13 +439,16 @@ public:
             if (stamp2Sec(odomQueue.front().header.stamp) < timeScanCur - 0.01)
                 odomQueue.pop_front();
             else
+                std::cout<<"too much odom data1"<<std::endl;
                 break;
         }
 
         if (odomQueue.empty())
+            std::cout<<"No odom data"<<std::endl;
             return;
 
         if (stamp2Sec(odomQueue.front().header.stamp) > timeScanCur)
+            std::cout<<"No odom data2"<<std::endl;
             return;
 
         // get start odometry at the beinning of the scan
@@ -426,6 +461,7 @@ public:
             if (stamp2Sec(startOdomMsg.header.stamp) < timeScanCur)
                 continue;
             else
+                std::cout<<"too much odom data2"<<std::endl;
                 break;
         }
 
@@ -463,8 +499,12 @@ public:
                 break;
         }
 
+        //Açıklama: Başlangıç ve bitiş odometri mesajlarının kovaryans matrisinin ilk elemanı karşılaştırılarak tutarlılık kontrolü yapılır.
         if (int(round(startOdomMsg.pose.covariance[0])) != int(round(endOdomMsg.pose.covariance[0])))
+        {
+            std::cout<<"Inconsistent odom source from start to end"<<std::endl;
             return;
+        }
 
         Eigen::Affine3f transBegin = pcl::getTransformation(startOdomMsg.pose.pose.position.x, startOdomMsg.pose.pose.position.y, startOdomMsg.pose.pose.position.z, roll, pitch, yaw);
 
@@ -478,6 +518,21 @@ public:
         pcl::getTranslationAndEulerAngles(transBt, odomIncreX, odomIncreY, odomIncreZ, rollIncre, pitchIncre, yawIncre);
 
         odomDeskewFlag = true;
+
+
+
+        /*
+        Genel İş Akışı
+            Odometri verisinin mevcut olmadığını varsay (odom_available = false).
+            Eski odometri verileri temizlenir (timeScanCur - 0.01 öncesi).
+            Odometri kuyruğu boşsa veya scan başlangıcından sonra bir veri yoksa sonlanır.
+            Scan başlangıcına en yakın odometri verisi seçilir ve Euler açılar hesaplanır.
+            Başlangıç tahmini (initial_guess) cloudInfo’ya kaydedilir.
+            Scan bitişine uygun odometri verisi kontrol edilir ve seçilir.
+            Başlangıç ve bitiş dönüşüm matrisleri hesaplanır.
+            Relatif dönüşüm farkı (transBt) ve artışlar (odomIncre) ayrıştırılır.
+            Deskew bayrağı (odomDeskewFlag) true yapılır.
+        */
     }
 
     void findRotation(double pointTime, float *rotXCur, float *rotYCur, float *rotZCur)
@@ -555,40 +610,46 @@ public:
         return newPoint;
     }
 
-    void projectPointCloud()
+    void projectPointCloud()//cloud handler da çağırılıyor.
     {
         int cloudSize = laserCloudIn->points.size();
         // range image projection
         for (int i = 0; i < cloudSize; ++i)
         {
+            //Nokta verileri, projeksiyon ve deskew işlemleri için bir kopya üzerinde çalıştırılır, böylece orijinal veri korunur.
             PointType thisPoint;
-            thisPoint.x = -laserCloudIn->points[i].x; //TODO: değiştirildi ama katkı sağlamadı. negatifi alında x ve y.
-            thisPoint.y = -laserCloudIn->points[i].y;
+            thisPoint.x = laserCloudIn->points[i].x; //TODO: değiştirildi ama katkı sağlamadı. negatifi alında x ve y.
+            thisPoint.y = laserCloudIn->points[i].y;
             thisPoint.z = laserCloudIn->points[i].z;
             thisPoint.intensity = laserCloudIn->points[i].intensity;
 
-            float range = pointDistance(thisPoint);
-            if (range < lidarMinRange || range > lidarMaxRange)
+            float range = pointDistance(thisPoint);// burada o noktanın öklid mesafesi hesaplanır. ardından max min lidar range e göre kontrol edilir.
+            if (range < lidarMinRange || range > lidarMaxRange) //parametrelerden geliyor.
                 continue;
 
-            int rowIdn = laserCloudIn->points[i].ring;
+            int rowIdn = laserCloudIn->points[i].ring; // noktanın ait olduğu tarama katmanını (row) belirler
             // if sensor is a velodyne (ringFlag = 2) calculate rowIdn based on number of scans
             if (ringFlag == 2) { 
                 float verticalAngle =
                     atan2(thisPoint.z,
                         sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y)) *
                     180 / M_PI;
-                rowIdn = (verticalAngle + (N_SCAN - 1)) / 2.0;
+                // rowIdn = (verticalAngle + (N_SCAN - 1)) / 2.0;
+                rowIdn = (verticalAngle + 45.0) * (N_SCAN - 1) / 90.0; // -45° ile +45°’yi 0 ile N_SCAN-1’e map eder     
+                std::cout<<"rowIdn: "<<rowIdn<<std::endl;         
             }
 
-            if (rowIdn < 0 || rowIdn >= N_SCAN)
+            if (rowIdn < 0 || rowIdn >= N_SCAN) //geçerli bir katman indeksi değilse atlar. 
+            {
+                std::cout<<"wrong row idn or n_scan "<<std::endl;
                 continue;
-
+            }
+            // project to range image
             if (rowIdn % downsampleRate != 0)
                 continue;
 
             int columnIdn = -1;
-            if (sensor == SensorType::VELODYNE || sensor == SensorType::OUSTER)
+            if (sensor == SensorType::VELODYNE || sensor == SensorType::OUSTER || sensor == SensorType::UNITREE)
             {
                 float horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
                 static float ang_res_x = 360.0/float(Horizon_SCAN);
@@ -620,6 +681,7 @@ public:
 
     void cloudExtraction()
     {
+        //Parametreler: N_SCAN (tarama katmanı sayısı) ve Horizon_SCAN (yatay çözünürlük), params.yaml’den alınır.
         int count = 0;
         // extract segmented cloud for lidar odometry
         for (int i = 0; i < N_SCAN; ++i)
