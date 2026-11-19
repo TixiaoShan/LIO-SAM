@@ -1,5 +1,6 @@
 #include "utility.hpp"
 #include "lio_sam/msg/cloud_info.hpp"
+#include <stdexcept>
 
 struct VelodynePointXYZIRT
 {
@@ -95,6 +96,11 @@ public:
     ImageProjection(const rclcpp::NodeOptions & options) :
             ParamServer("lio_sam_imageProjection", options), deskewFlag(0)
     {
+        if (downsampleRate < 1)
+        {
+            throw std::invalid_argument(
+                "downsampleRate must be >= 1, got " + std::to_string(downsampleRate));
+        }
         callbackGroupLidar = create_callback_group(
             rclcpp::CallbackGroupType::MutuallyExclusive);
         callbackGroupImu = create_callback_group(
@@ -659,7 +665,17 @@ int main(int argc, char** argv)
     options.use_intra_process_comms(true);
     rclcpp::executors::MultiThreadedExecutor exec;
 
-    auto IP = std::make_shared<ImageProjection>(options);
+    std::shared_ptr<ImageProjection> IP;
+    try
+    {
+        IP = std::make_shared<ImageProjection>(options);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        RCLCPP_FATAL(rclcpp::get_logger("lio_sam_imageProjection"), "%s", e.what());
+        rclcpp::shutdown();
+        return 1;
+    }
     exec.add_node(IP);
 
     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "\033[1;32m----> Image Projection Started.\033[0m");
