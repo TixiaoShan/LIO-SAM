@@ -91,3 +91,7 @@
     globalMapVisualizationSearchRadius: 1000.0    # meters, global map visualization radius
     globalMapVisualizationPoseDensity: 10.0       # meters, global map visualization keyframe density
     globalMapVisualizationLeafSize: 1.0           # meters, global map visualization cloud density
+
+    # TF
+    publishOdomToLidarTF: true                    # publish odom to lidar_link frame TF
+    publishOdomToBaseTF: true                     # publish odom to base link frame TF

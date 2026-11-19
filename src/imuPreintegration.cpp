@@ -140,10 +140,13 @@ public:
                 tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp), odometryFrame);
             tCur = tb;
         }
-        geometry_msgs::msg::TransformStamped ts;
-        tf2::convert(tCur, ts);
-        ts.child_frame_id = baselinkFrame;
-        tfBroadcaster->sendTransform(ts);
+        if (publishOdomToBaseTF)
+        {
+            geometry_msgs::msg::TransformStamped ts;
+            tf2::convert(tCur, ts);
+            ts.child_frame_id = baselinkFrame;
+            tfBroadcaster->sendTransform(ts);
+        }
 
         // publish IMU path
         static nav_msgs::msg::Path imuPath;
