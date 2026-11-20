@@ -16,7 +16,7 @@ def generate_launch_description():
     params_declare = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(
-            share_dir, 'config', 'params.yaml'),
+            share_dir, 'config', 'params_rs16.yaml'),
         description='FPath to the ROS2 parameters file to use.')
 
     print("urdf_file_name : {}".format(xacro_path))
@@ -64,6 +64,13 @@ def generate_launch_description():
             package='lio_sam',
             executable='lio_sam_mapOptimization',
             name='lio_sam_mapOptimization',
+            parameters=[parameter_file],
+            output='screen'
+        ),
+        Node(
+            package='lio_sam',
+            executable='lio_sam_simpleGpsOdom',
+            name='lio_sam_simpleGpsOdom',
             parameters=[parameter_file],
             output='screen'
         ),
