@@ -1,6 +1,10 @@
 #include "utility.hpp"
 #include "lio_sam/msg/cloud_info.hpp"
 #include "lio_sam/srv/save_map.hpp"
+
+#include <cstdlib>
+#include <filesystem>
+#include <string>
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
@@ -176,17 +180,95 @@ public:
             "lio_loop/loop_closure_detection", qos,
             std::bind(&mapOptimization::loopInfoHandler, this, std::placeholders::_1));
 
+// Resolve a map save destination below $HOME and (re)create it.
+// Returns false when the request is not a path below $HOME.
+static bool prepareMapDirectory(const std::string & configuredDirectory, const std::string & requested, std::string & out)
+{
+    const char * home = std::getenv("HOME");
+    if (home == nullptr)
+    {
+        std::cerr << "HOME is not set, refusing to save the map" << std::endl;
+        return false;
+    }
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    const fs::path homePath = fs::weakly_canonical(fs::path(home), ec);
+    if (ec)
+    {
+        std::cerr << "save_map: cannot resolve $HOME: " << ec.message() << std::endl;
+        return false;
+    }
+
+    fs::path dest;
+
+    if (requested.empty())
+    {
+        // keep the historic behaviour: a relative name below $HOME, or an
+        // absolute-looking parameter whose leading '/' is stripped
+        const std::string configured = configuredDirectory.empty()
+            ? std::string("Downloads/LOAM")
+            : (configuredDirectory.front() == '/' ? configuredDirectory.substr(1) : configuredDirectory);
+        dest = homePath / configured;
+    }
+    else
+    {
+        if (requested.front() != '/')
+        {
+            std::cerr << "save_map: destination must be an absolute path, got \""
+                      << requested << "\"" << std::endl;
+            return false;
+        }
+        dest = homePath / requested.substr(1);
+    }
+
+    const fs::path normalized = fs::weakly_canonical(dest, ec);
+    if (ec)
+    {
+        std::cerr << "save_map: cannot resolve destination \"" << dest.string()
+                  << "\": " << ec.message() << std::endl;
+        return false;
+    }
+
+    // reject $HOME itself and anything above it
+    const fs::path rel = normalized.lexically_relative(homePath);
+    if (rel.empty() || rel == fs::path(".") || rel.native().rfind("..", 0) == 0)
+    {
+        std::cerr << "save_map: destination \"" << dest.string()
+                  << "\" must be a directory below $HOME, refusing to save" << std::endl;
+        return false;
+    }
+    fs::remove_all(normalized, ec);
+    if (ec)
+    {
+        std::cerr << "save_map: failed to remove \"" << normalized.string()
+                  << "\": " << ec.message() << std::endl;
+        return false;
+    }
+    fs::create_directories(normalized, ec);
+    if (ec)
+    {
+        std::cerr << "save_map: failed to create \"" << normalized.string()
+                  << "\": " << ec.message() << std::endl;
+        return false;
+    }
+    out = normalized.string();
+    return true;
+}
         auto saveMapService = [this](const std::shared_ptr<rmw_request_id_t> request_header, const std::shared_ptr<lio_sam::srv::SaveMap::Request> req, std::shared_ptr<lio_sam::srv::SaveMap::Response> res) -> void {
             (void)request_header;
-            string saveMapDirectory;
             cout << "****************************************************" << endl;
             cout << "Saving map to pcd files ..." << endl;
-            if(req->destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
-            else saveMapDirectory = std::getenv("HOME") + req->destination;
+            string saveMapDirectory;
+            // validate the request before touching the filesystem
+            if (!prepareMapDirectory(savePCDDirectory, req->destination, saveMapDirectory))
+            {
+                res->success = false;
+                cout << "Saving map to pcd files failed: invalid destination" << endl;
+                cout << "****************************************************" << endl;
+                return;
+            }
             cout << "Save destination: " << saveMapDirectory << endl;
-            // create directory and remove old files;
-            int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
-            unused = system((std::string("mkdir -p ") + saveMapDirectory).c_str());
             // save key frame transformations
             pcl::io::savePCDFileBinary(saveMapDirectory + "/trajectory.pcd", *cloudKeyPoses3D);
             pcl::io::savePCDFileBinary(saveMapDirectory + "/transformations.pcd", *cloudKeyPoses6D);
@@ -410,9 +492,8 @@ public:
             return;
         cout << "****************************************************" << endl;
         cout << "Saving map to pcd files ..." << endl;
-        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
-        int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
-        unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
+        if (!prepareMapDirectory(savePCDDirectory, "", savePCDDirectory))
+            return;
         pcl::io::savePCDFileASCII(savePCDDirectory + "trajectory.pcd", *cloudKeyPoses3D);
         pcl::io::savePCDFileASCII(savePCDDirectory + "transformations.pcd", *cloudKeyPoses6D);
         pcl::PointCloud<PointType>::Ptr globalCornerCloud(new pcl::PointCloud<PointType>());
